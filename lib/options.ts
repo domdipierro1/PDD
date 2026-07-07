@@ -1,0 +1,15 @@
+export const propertySizes = ["Studio", "1 Bed", "2 Bed", "3 Bed", "4 Bed", "5 Bed+"] as const;
+export const services = ["End of Tenancy", "Deep Clean", "Interior Window Clean", "Oven Clean", "Exterior Window Clean", "Jet Wash", "Waste Clearance"] as const;
+export const addons = ["Oven", "Carpet", "Internal Windows", "External Windows", "Waste Removal", "Jet Wash", "Gutter Cleaning"] as const;
+export const leadSources = ["Website", "Phone", "WhatsApp", "Google Business Profile", "Google LSA", "Referral", "Agent", "Other"] as const;
+export const quoteStatuses = ["Quote Needed", "Quote Sent", "Awaiting Customer Reply", "Follow Up Needed", "Accepted", "Lost"] as const;
+export const jobStatuses = ["Lead Accepted", "Job Booked", "Contractor Needed", "Contractor Assigned", "In Progress", "Completed - Awaiting Photos", "Completed - Awaiting QA", "Completed", "Cancelled"] as const;
+export const qaStatuses = ["Not Started", "Awaiting QA", "QA Approved", "Re-clean Needed"] as const;
+export const contractorStatuses = ["Interested", "Screened", "Docs Requested", "Docs Received", "Agreement Sent", "Agreement Signed", "Test Job Needed", "Test Job Passed", "Active", "Paused - Insurance Expired", "Paused - Complaint", "Removed"] as const;
+export const hmrcStatuses = ["Yes", "No", "Not Sure"] as const;
+export const testJobStatuses = ["Not Needed Yet", "Needed", "Booked", "Passed", "Failed"] as const;
+export const dbsStatuses = ["Not Required", "Requested", "Complete", "Required by Site"] as const;
+export const complaintStatuses = ["Open", "Waiting for Photos", "Re-clean Booked", "Resolved", "Closed"] as const;
+export const severityLevels = ["Low", "Medium", "High", "Critical"] as const;
+export const launchStatuses = ["Not Started", "Pending", "In Progress", "Done", "Blocked"] as const;
+export const agentStatuses = ["Not Contacted", "Contacted", "Follow Up", "Pricing Sent", "Meeting Booked", "Won", "Lost"] as const;
