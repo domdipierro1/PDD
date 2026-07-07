@@ -49,6 +49,21 @@ export default function JobDetailPage() {
   const activeContractors = contractors.filter((c) => c.contractor_status === "Active" || c.active_rota_approved);
   const canPay = contractorPaymentDue(job);
   const openComplaints = complaints.filter((c) => c.complaint_status !== "Closed");
+  const completionFormBase = process.env.NEXT_PUBLIC_CONTRACTOR_COMPLETION_FORM_URL;
+  const selectedContractor = contractors.find((c) => c.id === job.selected_contractor_id);
+  const completionFormLink = completionFormBase
+    ? `${completionFormBase}${completionFormBase.includes("?") ? "&" : "?"}${new URLSearchParams({
+        job_id: job.id,
+        job_address: job.job_address || "",
+        contractor_name: selectedContractor?.name || "",
+      }).toString()}`
+    : "";
+
+  async function copyCompletionLink() {
+    if (!completionFormLink) return;
+    await navigator.clipboard.writeText(completionFormLink);
+    setMessage("Contractor completion form link copied.");
+  }
 
   return (
     <>
@@ -96,6 +111,17 @@ export default function JobDetailPage() {
             <Link className="button danger" href={`/complaints/new?job_id=${job.id}`}>Log complaint</Link>
           </div>
           <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after payment cleared, completion evidence submitted, QA approved, property secured and no unresolved issue.</div>
+          <div className="notice" style={{ marginTop: 14 }}>
+            <strong>Contractor completion form</strong><br />
+            {completionFormLink ? (
+              <>
+                Send this job-specific link after the contractor is assigned.<br />
+                <button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button>
+              </>
+            ) : (
+              <>Add NEXT_PUBLIC_CONTRACTOR_COMPLETION_FORM_URL in Vercel to generate job-specific form links here.</>
+            )}
+          </div>
         </aside>
       </div>
     </>

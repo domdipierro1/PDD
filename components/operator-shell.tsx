@@ -15,6 +15,7 @@ const nav = [
   { href: "/contractors", label: "Contractors" },
   { href: "/qa", label: "QA" },
   { href: "/payments", label: "Payments" },
+  { href: "/forms", label: "Forms" },
   { href: "/complaints", label: "Complaints" },
   { href: "/agents", label: "Agents" },
   { href: "/launch-checklist", label: "Launch" },

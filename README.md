@@ -99,3 +99,24 @@ Do not add contractor login, customer login, Xero, calendar automation or comple
 The goal of this version is simple:
 
 **Stop leads, jobs, QA, complaints and contractor payments falling through the cracks.**
+
+## Form/API integrations added
+
+This build includes API routes for connecting public forms to the private operator app:
+
+- `/api/website-enquiry` creates a Lead from the public website quote form.
+- `/api/contractor-onboarding` creates a Contractor from Tally/Google Forms onboarding.
+- `/api/job-completion` creates a Job Completion Submission and updates the linked Job to Awaiting QA.
+
+Add these Vercel environment variables:
+
+```env
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_secret_or_service_role_key
+FORM_WEBHOOK_SECRET=choose-a-long-random-string
+NEXT_PUBLIC_CONTRACTOR_ONBOARDING_FORM_URL=https://tally.so/r/YOUR_ONBOARDING_FORM
+NEXT_PUBLIC_CONTRACTOR_COMPLETION_FORM_URL=https://tally.so/r/YOUR_COMPLETION_FORM
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` must stay server-side in Vercel. Do not add it to website files or expose it publicly.
+
+See `docs/FORM_CONNECTIONS.md` for exact form setup instructions.
