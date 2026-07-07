@@ -4,6 +4,7 @@ type Tables<T> = {
   Row: T;
   Insert: Partial<T>;
   Update: Partial<T>;
+  Relationships: [];
 };
 
 export type Lead = {
