@@ -55,17 +55,33 @@ button { cursor: pointer; }
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   padding: 22px;
   background: var(--white);
   border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
   gap: 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .brand-block { display: grid; gap: 8px; }
 .brand-block img { border-radius: 12px; width: 132px; height: auto; }
 .brand-block span { display: block; color: var(--grey); font-size: .88rem; margin-top: 2px; }
-.side-nav { display: grid; gap: 6px; }
+.side-nav {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.side-nav::-webkit-scrollbar { width: 8px; }
+.side-nav::-webkit-scrollbar-thumb { background: rgba(47,93,80,.22); border-radius: 999px; }
+.side-nav::-webkit-scrollbar-track { background: transparent; }
 .side-nav a {
   padding: 11px 12px;
   border-radius: 14px;
@@ -133,7 +149,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--green); box-shad
 .button.secondary { background: var(--green-soft); color: var(--green-dark); border-color: transparent; }
 .button.ghost { background: transparent; color: var(--green-dark); border-color: var(--line); }
 .button.danger { background: var(--red); border-color: var(--red); }
-.button.full { width: 100%; }
+.button.full { width: 100%; flex-shrink: 0; }
 .button:disabled { opacity: .45; cursor: not-allowed; }
 
 .badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-weight: 850; font-size: .78rem; white-space: nowrap; }
