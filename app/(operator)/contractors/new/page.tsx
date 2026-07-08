@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { dbsStatuses, hmrcStatuses } from "@/lib/options";
+import { dbsStatuses, hmrcStatuses, fulfilmentPriorities, rateDiscoveryStatuses, rateTiers } from "@/lib/options";
 import { toBool, toMoney } from "@/lib/utils";
 
 export default function NewContractorPage() {
@@ -37,11 +37,30 @@ export default function NewContractorPage() {
       active_rota_approved: false,
       contractor_status: "Interested",
       dbs_status: String(form.get("dbs_status") || "Not Required"),
+      rate_tier: String(form.get("rate_tier") || "Unrated"),
+      fulfilment_priority: String(form.get("fulfilment_priority") || "Reserve"),
+      rate_discovery_status: String(form.get("rate_discovery_status") || "Ask Rates"),
+      rate_notes: String(form.get("rate_notes") || "").trim() || null,
       notes: String(form.get("notes") || "").trim() || null,
     };
     const { data, error: insertError } = await supabase.from("contractors").insert(payload).select("id").single();
+    if (insertError) { setSaving(false); return setError(insertError.message); }
+
+    const ratePayload = {
+      contractor_id: data?.id,
+      rate_card_signed: false,
+      effective_from: new Date().toISOString().slice(0, 10),
+      studio_rate: toMoney(form.get("studio_rate")),
+      one_bed_rate: toMoney(form.get("one_bed_rate")),
+      two_bed_rate: toMoney(form.get("two_bed_rate")),
+      three_bed_rate: toMoney(form.get("three_bed_rate")),
+      four_bed_rate: toMoney(form.get("four_bed_rate")),
+      deep_clean_hourly_rate: toMoney(form.get("deep_clean_hourly_rate")),
+      notes: String(form.get("rate_notes") || "").trim() || null,
+    };
+    const hasAnyRate = Object.entries(ratePayload).some(([key, value]) => key.endsWith("_rate") && value !== null);
+    if (data?.id && hasAnyRate) await supabase.from("contractor_rates").insert(ratePayload);
     setSaving(false);
-    if (insertError) return setError(insertError.message);
     router.push(`/contractors/${data?.id}`);
   }
 
@@ -57,6 +76,9 @@ export default function NewContractorPage() {
         <label className="full">Areas covered<input name="areas_covered" placeholder="Southgate, Palmers Green, Wood Green" /></label>
         <label>HMRC/self-employed status<select name="hmrc_status">{hmrcStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label>DBS status<select name="dbs_status">{dbsStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label>Rate tier<select name="rate_tier">{rateTiers.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label>Fulfilment priority<select name="fulfilment_priority">{fulfilmentPriorities.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label>Rate discovery<select name="rate_discovery_status">{rateDiscoveryStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label><span>Own transport?</span><input name="own_transport" type="checkbox" /></label>
         <label><span>EOT/deep clean experience?</span><input name="eot_deep_clean_experience" type="checkbox" /></label>
         <label><span>Insurance uploaded?</span><input name="insurance_certificate_uploaded" type="checkbox" /></label>
@@ -64,6 +86,19 @@ export default function NewContractorPage() {
         <label>Insurance expiry date<input name="insurance_expiry_date" type="date" /></label>
         <label>Insurance cover amount<input name="insurance_cover_amount" inputMode="decimal" placeholder="1000000" /></label>
         <label className="full">Insurance file link<input name="insurance_file_link" type="url" /></label>
+        <fieldset className="checklist-group full">
+          <legend>Quoted rates, if known</legend>
+          <p className="help checklist-help">Ask the cleaner for their rates first. Leave blank if not known yet.</p>
+          <div className="form-grid">
+            <label>Studio<input name="studio_rate" inputMode="decimal" placeholder="60" /></label>
+            <label>1 Bed<input name="one_bed_rate" inputMode="decimal" placeholder="100" /></label>
+            <label>2 Bed<input name="two_bed_rate" inputMode="decimal" placeholder="160" /></label>
+            <label>3 Bed<input name="three_bed_rate" inputMode="decimal" placeholder="200" /></label>
+            <label>4 Bed<input name="four_bed_rate" inputMode="decimal" placeholder="Agreed per job" /></label>
+            <label>Deep clean hourly<input name="deep_clean_hourly_rate" inputMode="decimal" placeholder="20" /></label>
+          </div>
+        </fieldset>
+        <label className="full">Rate notes<textarea name="rate_notes" placeholder="e.g. Wants £20 above target, has own kit, flexible on 1-2 bed jobs." /></label>
         <label className="full">Notes<textarea name="notes" /></label>
         <div className="full actions-row"><button className="button" disabled={saving}>{saving ? "Saving…" : "Save contractor"}</button><Link className="button ghost" href="/contractors">Cancel</Link></div>
       </form>

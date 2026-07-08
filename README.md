@@ -120,3 +120,28 @@ NEXT_PUBLIC_CONTRACTOR_COMPLETION_FORM_URL=https://tally.so/r/YOUR_COMPLETION_FO
 `SUPABASE_SERVICE_ROLE_KEY` must stay server-side in Vercel. Do not add it to website files or expose it publicly.
 
 See `docs/FORM_CONNECTIONS.md` for exact form setup instructions.
+
+## v2: Forms, records and finance
+
+If you are upgrading from the first portal version, run this additional Supabase migration after deployment:
+
+```text
+supabase/migrations/002_documents_photos_finance.sql
+```
+
+New public pages:
+
+- `/quote-request` — creates Leads
+- `/contractor-onboarding` — creates Contractors
+- `/job-completion?job_id=...` — creates job completion submissions and moves jobs to Awaiting QA
+
+New operator pages:
+
+- `/finance` — revenue/cost/profit tracker
+- `/records` — documents and photo links
+
+Contractors still do not receive app access.
+
+## Job completion checklist update
+
+The built-in `/job-completion` contractor form now includes required room-by-room checklist checkboxes for kitchen, bathroom(s), bedrooms/living areas, general finish/security, optional add-ons, before/after photo links, issue notes and contractor notes. The submitted checklist is saved into the job completion notes and moves the job into Awaiting QA.

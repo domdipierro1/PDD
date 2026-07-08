@@ -65,6 +65,38 @@ export type Contractor = {
   pause_reason: string | null;
   dbs_status: string | null;
   notes: string | null;
+  rate_tier?: string | null;
+  fulfilment_priority?: string | null;
+  rate_discovery_status?: string | null;
+  reliability_score?: number | null;
+  quality_score?: number | null;
+  rate_notes?: string | null;
+  last_contacted_at?: string | null;
+};
+
+export type ContractorRate = {
+  id: string;
+  contractor_id: string;
+  rate_card_signed: boolean | null;
+  effective_from: string | null;
+  studio_rate: number | null;
+  one_bed_rate: number | null;
+  two_bed_rate: number | null;
+  three_bed_rate: number | null;
+  four_bed_rate: number | null;
+  five_bed_plus_rate: number | null;
+  deep_clean_hourly_rate: number | null;
+  single_oven_rate: number | null;
+  double_oven_rate: number | null;
+  range_cooker_rate: number | null;
+  carpet_per_room_rate: number | null;
+  windows_flat_rate: number | null;
+  windows_house_rate: number | null;
+  waste_small_load_rate: number | null;
+  waste_quarter_van_rate: number | null;
+  waste_half_van_rate: number | null;
+  waste_full_van_rate: number | null;
+  notes: string | null;
 };
 
 export type Job = {
@@ -110,6 +142,10 @@ export type Job = {
   contractor_cost: number | null;
   review_requested: boolean | null;
   review_link_sent_at: string | null;
+  invoice_link?: string | null;
+  customer_agreement_link?: string | null;
+  contractor_job_sheet_link?: string | null;
+  job_folder_link?: string | null;
   notes: string | null;
 };
 
@@ -176,6 +212,66 @@ export type AgentOutreach = {
   outcome: string | null;
 };
 
+
+export type JobDocument = {
+  id: string;
+  created_at: string;
+  job_id: string | null;
+  contractor_id: string | null;
+  lead_id: string | null;
+  document_type: string;
+  title: string;
+  file_link: string | null;
+  signed: boolean | null;
+  signed_by: string | null;
+  signed_at: string | null;
+  start_work_consent: boolean | null;
+  expiry_date: string | null;
+  notes: string | null;
+};
+
+export type JobPhoto = {
+  id: string;
+  created_at: string;
+  job_id: string | null;
+  contractor_id: string | null;
+  photo_stage: string;
+  title: string | null;
+  file_link: string;
+  submitted_by: string | null;
+  marketing_permission: boolean | null;
+  notes: string | null;
+};
+
+export type FinanceItem = {
+  id: string;
+  created_at: string;
+  job_id: string | null;
+  lead_id: string | null;
+  item_type: string;
+  category: string;
+  description: string | null;
+  amount: number;
+  due_date: string | null;
+  paid_date: string | null;
+  payment_status: string | null;
+  payment_method: string | null;
+  reference: string | null;
+  evidence_link: string | null;
+  notes: string | null;
+};
+
+export type AuditLogItem = {
+  id: string;
+  created_at: string;
+  entity_type: string;
+  entity_id: string | null;
+  action: string;
+  summary: string | null;
+  metadata: Json | null;
+  actor: string | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -186,9 +282,13 @@ export type Database = {
       pricing_reference: Tables<PricingReference>;
       launch_checklist: Tables<LaunchChecklistItem>;
       agent_outreach: Tables<AgentOutreach>;
-      contractor_rates: Tables<Record<string, unknown>>;
+      contractor_rates: Tables<ContractorRate>;
       job_completion_submissions: Tables<Record<string, unknown>>;
       operator_profiles: Tables<Record<string, unknown>>;
+      job_documents: Tables<JobDocument>;
+      job_photos: Tables<JobPhoto>;
+      finance_items: Tables<FinanceItem>;
+      audit_log: Tables<AuditLogItem>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

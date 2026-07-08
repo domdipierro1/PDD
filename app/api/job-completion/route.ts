@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/server-supabase";
-import { arrayValue, bool, dateValue, getReturnUrl, optionalText, readIncomingPayload, text, verifyWebhookSecret } from "@/lib/form-ingest";
+import { arrayValue, bool, dateValue, getReturnUrl, isHoneypotFilled, optionalText, readIncomingPayload, verifyWebhookSecret } from "@/lib/form-ingest";
+
+function formatChecklist(title: string, items: string[]) {
+  if (!items.length) return null;
+  return `${title}:\n- ${items.join("\n- ")}`;
+}
 
 export async function POST(request: Request) {
   if (!verifyWebhookSecret(request)) {
@@ -10,12 +15,31 @@ export async function POST(request: Request) {
   const url = new URL(request.url);
   const payload = await readIncomingPayload(request);
   const returnUrl = getReturnUrl(request, payload);
+
+  if (isHoneypotFilled(payload)) {
+    if (returnUrl) return NextResponse.redirect(returnUrl, 303);
+    return NextResponse.json({ ok: true });
+  }
   const jobId = url.searchParams.get("job_id") || optionalText(payload, ["job_id", "job id", "linked job id", "linked_job_id"]);
   const beforePhotos = optionalText(payload, ["before_photos", "before photos", "upload before photos", "before photo link"]);
   const afterPhotos = optionalText(payload, ["after_photos", "after photos", "upload after photos", "after photo link"]);
   const anyIssues = bool(payload, ["any issues", "any_issues", "issues"]);
   const issueDescription = optionalText(payload, ["describe issue", "issue description", "issue_description"]);
   const propertySecured = bool(payload, ["property secured", "property_secured"]);
+  const kitchenChecklist = arrayValue(payload, ["kitchen checklist", "kitchen_checklist"]);
+  const bathroomChecklist = arrayValue(payload, ["bathroom checklist", "bathroom_checklist"]);
+  const livingChecklist = arrayValue(payload, ["living checklist", "bedrooms living checklist", "living_checklist"]);
+  const generalChecklist = arrayValue(payload, ["general checklist", "general_checklist"]);
+  const addonChecklist = arrayValue(payload, ["addon checklist", "add-on checklist", "addons checklist", "addon_checklist"]);
+  const unableToCompleteNotes = optionalText(payload, ["unable to complete notes", "not applicable notes", "incomplete items", "unable_to_complete_notes"]);
+  const checklistNotes = [
+    formatChecklist("Kitchen checklist", kitchenChecklist),
+    formatChecklist("Bathroom checklist", bathroomChecklist),
+    formatChecklist("Bedrooms/living checklist", livingChecklist),
+    formatChecklist("General/security checklist", generalChecklist),
+    formatChecklist("Add-ons checklist", addonChecklist),
+    unableToCompleteNotes ? `Unable to complete / N/A notes:\n${unableToCompleteNotes}` : null,
+  ].filter(Boolean).join("\n\n");
 
   const submission = {
     job_id: jobId || null,
@@ -24,17 +48,17 @@ export async function POST(request: Request) {
     job_address: optionalText(payload, ["job address", "job_address", "property address", "address"]),
     date_completed: dateValue(payload, ["date completed", "date_completed", "completion date"]),
     time_completed: optionalText(payload, ["time completed", "time_completed", "completion time"]),
-    kitchen_completed: bool(payload, ["kitchen completed", "kitchen", "kitchen confirmed complete"]),
-    bathroom_completed: bool(payload, ["bathroom completed", "bathroom", "bathroom confirmed complete"]),
-    bedrooms_completed: bool(payload, ["bedrooms completed", "bedrooms", "bedrooms confirmed complete"]),
-    general_completed: bool(payload, ["general completed", "general", "general confirmed complete"]),
-    addons_completed: arrayValue(payload, ["addons completed", "add-ons completed", "add ons completed"]),
+    kitchen_completed: kitchenChecklist.length > 0 || bool(payload, ["kitchen completed", "kitchen", "kitchen confirmed complete"]),
+    bathroom_completed: bathroomChecklist.length > 0 || bool(payload, ["bathroom completed", "bathroom", "bathroom confirmed complete"]),
+    bedrooms_completed: livingChecklist.length > 0 || bool(payload, ["bedrooms completed", "bedrooms", "bedrooms confirmed complete"]),
+    general_completed: generalChecklist.length > 0 || bool(payload, ["general completed", "general", "general confirmed complete"]),
+    addons_completed: arrayValue(payload, ["addons completed", "add-ons completed", "add ons completed"]).concat(addonChecklist),
     before_photos: beforePhotos,
     after_photos: afterPhotos,
     any_issues: anyIssues,
     issue_description: issueDescription,
     property_secured: propertySecured,
-    additional_notes: optionalText(payload, ["additional notes", "notes"]),
+    additional_notes: [optionalText(payload, ["additional notes", "notes"]), checklistNotes].filter(Boolean).join("\n\n") || null,
   };
 
   const supabase = createServiceSupabaseClient();
@@ -45,6 +69,28 @@ export async function POST(request: Request) {
   }
 
   if (jobId) {
+    if (beforePhotos) {
+      await supabase.from("job_photos").insert({
+        job_id: jobId,
+        photo_stage: "Before",
+        title: "Before photos",
+        file_link: beforePhotos,
+        submitted_by: submission.contractor_name,
+        notes: "Created automatically from job completion form."
+      });
+    }
+
+    if (afterPhotos) {
+      await supabase.from("job_photos").insert({
+        job_id: jobId,
+        photo_stage: "After",
+        title: "After photos",
+        file_link: afterPhotos,
+        submitted_by: submission.contractor_name,
+        notes: "Created automatically from job completion form."
+      });
+    }
+
     const updatePayload: Record<string, unknown> = {
       completion_form_submitted: true,
       before_photos_link: beforePhotos,

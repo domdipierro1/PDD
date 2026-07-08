@@ -21,7 +21,14 @@ export async function readIncomingPayload(request: Request): Promise<IncomingPay
     const formData = await request.formData();
     const payload: IncomingPayload = {};
     for (const [key, value] of formData.entries()) {
-      payload[key] = typeof File !== "undefined" && value instanceof File ? value.name : value;
+      const parsedValue = typeof File !== "undefined" && value instanceof File ? value.name : value;
+      if (payload[key] === undefined) {
+        payload[key] = parsedValue;
+      } else if (Array.isArray(payload[key])) {
+        (payload[key] as unknown[]).push(parsedValue);
+      } else {
+        payload[key] = [payload[key], parsedValue];
+      }
     }
     return payload;
   }
@@ -121,10 +128,15 @@ export function arrayValue(payload: IncomingPayload, aliases: string[]): string[
 }
 
 export function verifyWebhookSecret(request: Request): boolean {
+  const url = new URL(request.url);
+
+  // Built-in public PDD forms are intentionally allowed without exposing the webhook secret.
+  // Keep these pages unlisted and use the honeypot fields to reduce spam.
+  if (url.searchParams.get("public") === "1") return true;
+
   const expected = process.env.FORM_WEBHOOK_SECRET;
   if (!expected) return true;
 
-  const url = new URL(request.url);
   const querySecret = url.searchParams.get("secret");
   const headerSecret = request.headers.get("x-pdd-form-secret");
   const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
@@ -140,7 +152,10 @@ export function getReturnUrl(request: Request, payload: IncomingPayload): string
   if (!candidate) return null;
 
   try {
-    const parsed = new URL(candidate);
+    const parsed = new URL(candidate, url.origin);
+    if (parsed.origin !== url.origin && !["pddcleaningservices.co.uk", "www.pddcleaningservices.co.uk"].includes(parsed.hostname)) {
+      return null;
+    }
     return parsed.toString();
   } catch {
     return null;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/server-supabase";
-import { arrayValue, bool, dateValue, getReturnUrl, numberValue, optionalText, readIncomingPayload, text, verifyWebhookSecret } from "@/lib/form-ingest";
+import { arrayValue, bool, dateValue, getReturnUrl, isHoneypotFilled, numberValue, optionalText, readIncomingPayload, text, verifyWebhookSecret } from "@/lib/form-ingest";
 
 export async function POST(request: Request) {
   if (!verifyWebhookSecret(request)) {
@@ -9,8 +9,15 @@ export async function POST(request: Request) {
 
   const payload = await readIncomingPayload(request);
   const returnUrl = getReturnUrl(request, payload);
+
+  if (isHoneypotFilled(payload)) {
+    if (returnUrl) return NextResponse.redirect(returnUrl, 303);
+    return NextResponse.json({ ok: true });
+  }
   const insuranceFile = optionalText(payload, ["insurance_file_link", "insurance file", "insurance certificate", "upload insurance certificate", "public liability insurance certificate"]);
   const rightToWorkFile = optionalText(payload, ["id_file_link", "right to work", "upload right to work proof", "id", "id/right to work"]);
+
+  const rateNotes = optionalText(payload, ["rate notes", "rate_notes", "pricing notes", "usual rate notes"]);
 
   const notes = [
     optionalText(payload, ["describe experience", "experience notes", "experience", "cleaning experience"]),
@@ -39,6 +46,10 @@ export async function POST(request: Request) {
     test_job_result: "Pending",
     active_rota_approved: false,
     contractor_status: "Docs Received",
+    rate_tier: "Unrated",
+    fulfilment_priority: "Reserve",
+    rate_discovery_status: "Rates Received",
+    rate_notes: rateNotes,
     dbs_status: "Not Required",
     notes,
   };
@@ -48,6 +59,25 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+
+  const ratePayload = {
+    contractor_id: data?.id,
+    rate_card_signed: false,
+    effective_from: new Date().toISOString().slice(0, 10),
+    studio_rate: numberValue(payload, ["studio rate", "studio_rate", "studio"]),
+    one_bed_rate: numberValue(payload, ["1 bed rate", "one bed rate", "one_bed_rate"]),
+    two_bed_rate: numberValue(payload, ["2 bed rate", "two bed rate", "two_bed_rate"]),
+    three_bed_rate: numberValue(payload, ["3 bed rate", "three bed rate", "three_bed_rate"]),
+    four_bed_rate: numberValue(payload, ["4 bed rate", "four bed rate", "four_bed_rate"]),
+    deep_clean_hourly_rate: numberValue(payload, ["deep clean hourly rate", "deep_clean_hourly_rate", "deep clean rate"]),
+    single_oven_rate: numberValue(payload, ["single oven rate", "single_oven_rate"]),
+    double_oven_rate: numberValue(payload, ["double oven rate", "double_oven_rate"]),
+    notes: rateNotes,
+  };
+  const hasAnyRate = Object.entries(ratePayload).some(([key, value]) => key.endsWith("_rate") && value !== null && value !== undefined);
+  if (data?.id && hasAnyRate) {
+    await supabase.from("contractor_rates").insert(ratePayload);
   }
 
   if (returnUrl) return NextResponse.redirect(returnUrl, 303);
