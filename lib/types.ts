@@ -65,6 +65,38 @@ export type Contractor = {
   pause_reason: string | null;
   dbs_status: string | null;
   notes: string | null;
+  rate_tier?: string | null;
+  fulfilment_priority?: string | null;
+  rate_discovery_status?: string | null;
+  reliability_score?: number | null;
+  quality_score?: number | null;
+  rate_notes?: string | null;
+  last_contacted_at?: string | null;
+};
+
+export type ContractorRate = {
+  id: string;
+  contractor_id: string;
+  rate_card_signed: boolean | null;
+  effective_from: string | null;
+  studio_rate: number | null;
+  one_bed_rate: number | null;
+  two_bed_rate: number | null;
+  three_bed_rate: number | null;
+  four_bed_rate: number | null;
+  five_bed_plus_rate: number | null;
+  deep_clean_hourly_rate: number | null;
+  single_oven_rate: number | null;
+  double_oven_rate: number | null;
+  range_cooker_rate: number | null;
+  carpet_per_room_rate: number | null;
+  windows_flat_rate: number | null;
+  windows_house_rate: number | null;
+  waste_small_load_rate: number | null;
+  waste_quarter_van_rate: number | null;
+  waste_half_van_rate: number | null;
+  waste_full_van_rate: number | null;
+  notes: string | null;
 };
 
 export type Job = {
@@ -250,7 +282,7 @@ export type Database = {
       pricing_reference: Tables<PricingReference>;
       launch_checklist: Tables<LaunchChecklistItem>;
       agent_outreach: Tables<AgentOutreach>;
-      contractor_rates: Tables<Record<string, unknown>>;
+      contractor_rates: Tables<ContractorRate>;
       job_completion_submissions: Tables<Record<string, unknown>>;
       operator_profiles: Tables<Record<string, unknown>>;
       job_documents: Tables<JobDocument>;

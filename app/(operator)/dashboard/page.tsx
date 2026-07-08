@@ -52,7 +52,8 @@ export default function DashboardPage() {
     const openComplaints = complaints.filter((c) => c.complaint_status !== "Closed").length;
     const insuranceIssues = contractors.filter((c) => !c.insurance_certificate_uploaded || !c.insurance_expiry_date || c.insurance_expiry_date <= new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)).length;
     const launchBlockers = checklist.filter((c) => c.required_before_live && c.status !== "Done").length;
-    return { quoteNeeded, followUps, contractorNeeded, todayTomorrow, awaitingQA, paymentHolds, paymentsDue, openComplaints, insuranceIssues, launchBlockers };
+    const ratesNeeded = contractors.filter((c) => !c.rate_card_signed || !c.rate_tier || c.rate_tier === "Unrated").length;
+    return { quoteNeeded, followUps, contractorNeeded, todayTomorrow, awaitingQA, paymentHolds, paymentsDue, openComplaints, insuranceIssues, launchBlockers, ratesNeeded };
   }, [leads, jobs, contractors, complaints, checklist, today, tomorrow]);
 
   const priorityJobs = jobs.filter((j) => j.payment_hold || (j.completion_form_submitted && j.qa_status === "Awaiting QA") || contractorPaymentDue(j)).slice(0, 6);
@@ -82,6 +83,7 @@ export default function DashboardPage() {
         <StatCard title="Contractor payments due" value={stats.paymentsDue} href="/payments" note="Only after clearance + QA" />
         <StatCard title="Open complaints" value={stats.openComplaints} href="/complaints" />
         <StatCard title="Insurance/doc issues" value={stats.insuranceIssues} href="/contractors" />
+        <StatCard title="Rates needed" value={stats.ratesNeeded} href="/contractor-pricing" />
         <StatCard title="Launch blockers" value={stats.launchBlockers} href="/launch-checklist" />
       </div>
 

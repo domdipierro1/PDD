@@ -13,3 +13,6 @@ export const complaintStatuses = ["Open", "Waiting for Photos", "Re-clean Booked
 export const severityLevels = ["Low", "Medium", "High", "Critical"] as const;
 export const launchStatuses = ["Not Started", "Pending", "In Progress", "Done", "Blocked"] as const;
 export const agentStatuses = ["Not Contacted", "Contacted", "Follow Up", "Pricing Sent", "Meeting Booked", "Won", "Lost"] as const;
+export const rateTiers = ["Unrated", "Core", "Premium Backup", "Reserve", "Too Expensive"] as const;
+export const fulfilmentPriorities = ["First Choice", "Backup", "Reserve", "Do Not Use Yet"] as const;
+export const rateDiscoveryStatuses = ["Ask Rates", "Rates Received", "Negotiating", "Rate Card Agreed", "Too Expensive", "Not Suitable"] as const;

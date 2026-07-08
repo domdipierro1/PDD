@@ -6,9 +6,10 @@ import { FormEvent, useEffect, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import { MetricRow } from "@/components/metric-row";
 import { supabase } from "@/lib/supabase";
-import type { Job, Contractor, Complaint, JobDocument, JobPhoto, FinanceItem } from "@/lib/types";
+import type { Job, Contractor, ContractorRate, Complaint, JobDocument, JobPhoto, FinanceItem } from "@/lib/types";
 import { contractorPaymentDue } from "@/lib/quote";
 import { formatDate, formatCurrency, toBool, toMoney } from "@/lib/utils";
+import { estimatedRateForProperty } from "@/lib/rates";
 
 export default function JobDetailPage() {
   const params = useParams<{ id: string }>();
@@ -18,17 +19,19 @@ export default function JobDetailPage() {
   const [documents, setDocuments] = useState<JobDocument[]>([]);
   const [photos, setPhotos] = useState<JobPhoto[]>([]);
   const [financeItems, setFinanceItems] = useState<FinanceItem[]>([]);
+  const [contractorRates, setContractorRates] = useState<ContractorRate[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const [jobRes, contractorRes, complaintRes, docRes, photoRes, financeRes] = await Promise.all([
+    const [jobRes, contractorRes, complaintRes, docRes, photoRes, financeRes, rateRes] = await Promise.all([
       supabase.from("jobs").select("*").eq("id", params.id).single(),
       supabase.from("contractors").select("*").order("name", { ascending: true }),
       supabase.from("complaints").select("*").eq("job_id", params.id).order("date_opened", { ascending: false }),
       supabase.from("job_documents").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
       supabase.from("job_photos").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
       supabase.from("finance_items").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
+      supabase.from("contractor_rates").select("*").order("effective_from", { ascending: false }),
     ]);
     if (jobRes.error) setError(jobRes.error.message);
     setJob(jobRes.data as Job);
@@ -37,6 +40,7 @@ export default function JobDetailPage() {
     if (!docRes.error) setDocuments((docRes.data || []) as JobDocument[]);
     if (!photoRes.error) setPhotos((photoRes.data || []) as JobPhoto[]);
     if (!financeRes.error) setFinanceItems((financeRes.data || []) as FinanceItem[]);
+    if (!rateRes.error) setContractorRates((rateRes.data || []) as ContractorRate[]);
   }
 
   useEffect(() => { load(); }, [params.id]);
@@ -124,20 +128,23 @@ export default function JobDetailPage() {
 
   if (error) return <div className="notice bad">{error}</div>;
   if (!job) return <div className="notice">Loading job…</div>;
+  const currentJob = job;
   const activeContractors = contractors.filter((c) => c.contractor_status === "Active" || c.active_rota_approved);
-  const canPay = contractorPaymentDue(job);
+  const canPay = contractorPaymentDue(currentJob);
   const openComplaints = complaints.filter((c) => c.complaint_status !== "Closed");
-  const selectedContractor = contractors.find((c) => c.id === job.selected_contractor_id);
+  const selectedContractor = contractors.find((c) => c.id === currentJob.selected_contractor_id);
+  const selectedContractorRate = contractorRates.find((rate) => rate.contractor_id === currentJob.selected_contractor_id) || null;
+  const suggestedContractorCost = estimatedRateForProperty(selectedContractorRate, currentJob.property_size);
   const completionFormLink = `/job-completion?${new URLSearchParams({
-    job_id: job.id,
-    job_address: job.job_address || "",
+    job_id: currentJob.id,
+    job_address: currentJob.job_address || "",
     contractor_name: selectedContractor?.name || "",
   }).toString()}`;
 
   const extraRevenue = financeItems.filter((i) => i.item_type === "Revenue").reduce((sum, i) => sum + Number(i.amount || 0), 0);
   const extraCosts = financeItems.filter((i) => i.item_type === "Cost").reduce((sum, i) => sum + Number(i.amount || 0), 0);
-  const totalRevenue = Number(job.customer_price || 0) + extraRevenue;
-  const totalCosts = Number(job.contractor_cost || 0) + extraCosts;
+  const totalRevenue = Number(currentJob.customer_price || 0) + extraRevenue;
+  const totalCosts = Number(currentJob.contractor_cost || 0) + extraCosts;
 
   async function copyCompletionLink() {
     const absolute = `${window.location.origin}${completionFormLink}`;
@@ -145,11 +152,30 @@ export default function JobDetailPage() {
     setMessage("Contractor completion form link copied.");
   }
 
+  async function copyDispatchMessage() {
+    const absoluteCompletionLink = `${window.location.origin}${completionFormLink}`;
+    const text = `Hi ${selectedContractor?.name || ""}, we have a job available.
+
+Service: ${currentJob.service_needed || "Cleaning"}
+Property: ${currentJob.property_size || "Property"}
+Date: ${formatDate(currentJob.job_date)}
+Arrival window: ${currentJob.arrival_window || "To confirm"}
+Address: ${currentJob.job_address || "To confirm"}
+Add-ons: ${currentJob.addons?.length ? currentJob.addons.join(", ") : "None"}
+Access: ${currentJob.access_notes || "To confirm"}
+Parking: ${currentJob.parking_notes || "To confirm"}
+Your rate: ${formatCurrency(currentJob.contractor_cost || suggestedContractorCost)}
+
+Please confirm whether you can accept this job. Before/after photos and the completion checklist are required after the clean. Completion form: ${absoluteCompletionLink}`;
+    await navigator.clipboard.writeText(text);
+    setMessage("Contractor dispatch message copied.");
+  }
+
   return (
     <>
       <div className="page-head">
-        <div><h1>{job.customer_name}</h1><p>{job.job_address || "No address"}</p></div>
-        <div className="actions-row"><StatusBadge value={job.job_status} /><StatusBadge value={job.qa_status} />{canPay ? <StatusBadge value="Payment Due" /> : null}<Link className="button ghost" href="/jobs">Back</Link></div>
+        <div><h1>{currentJob.customer_name}</h1><p>{currentJob.job_address || "No address"}</p></div>
+        <div className="actions-row"><StatusBadge value={currentJob.job_status} /><StatusBadge value={currentJob.qa_status} />{canPay ? <StatusBadge value="Payment Due" /> : null}<Link className="button ghost" href="/jobs">Back</Link></div>
       </div>
       {message ? <div className="notice" style={{ marginBottom: 16 }}>{message}</div> : null}
       {openComplaints.length > 0 ? <div className="notice bad" style={{ marginBottom: 16 }}>This job has an open complaint. Keep payment hold active until resolved.</div> : null}
@@ -157,31 +183,37 @@ export default function JobDetailPage() {
         <section className="card">
           <h2 style={{ marginTop: 0 }}>Job details</h2>
           <div className="kv">
-            <div><span>Date</span><strong>{formatDate(job.job_date)}</strong></div>
-            <div><span>Service</span><strong>{job.service_needed || "—"}</strong></div>
-            <div><span>Property</span><strong>{job.property_size || "—"}</strong></div>
-            <div><span>Add-ons</span><strong>{job.addons?.join(", ") || "None"}</strong></div>
-            <div><span>Customer price</span><strong>{formatCurrency(job.customer_price)}</strong></div>
-            <div><span>Contractor cost</span><strong>{formatCurrency(job.contractor_cost)}</strong></div>
+            <div><span>Date</span><strong>{formatDate(currentJob.job_date)}</strong></div>
+            <div><span>Service</span><strong>{currentJob.service_needed || "—"}</strong></div>
+            <div><span>Property</span><strong>{currentJob.property_size || "—"}</strong></div>
+            <div><span>Add-ons</span><strong>{currentJob.addons?.join(", ") || "None"}</strong></div>
+            <div><span>Customer price</span><strong>{formatCurrency(currentJob.customer_price)}</strong></div>
+            <div><span>Contractor cost</span><strong>{formatCurrency(currentJob.contractor_cost)}</strong></div>
             <div><span>Extra revenue</span><strong>{formatCurrency(extraRevenue)}</strong></div>
             <div><span>Extra costs</span><strong>{formatCurrency(extraCosts)}</strong></div>
             <div><span>Total job profit</span><strong>{formatCurrency(totalRevenue - totalCosts)}</strong></div>
-            <div><span>Customer paid</span><strong>{job.customer_paid ? "Yes" : "No"}</strong></div>
-            <div><span>Payment cleared</span><strong>{job.payment_cleared ? "Yes" : "No"}</strong></div>
-            <div><span>Completion form</span><strong>{job.completion_form_submitted ? "Submitted" : "Not submitted"}</strong></div>
-            <div><span>Property secured</span><strong>{job.property_secured ? "Yes" : "No"}</strong></div>
-            <div><span>Contractor paid</span><strong>{job.contractor_paid ? "Yes" : "No"}</strong></div>
+            <div><span>Customer paid</span><strong>{currentJob.customer_paid ? "Yes" : "No"}</strong></div>
+            <div><span>Payment cleared</span><strong>{currentJob.payment_cleared ? "Yes" : "No"}</strong></div>
+            <div><span>Completion form</span><strong>{currentJob.completion_form_submitted ? "Submitted" : "Not submitted"}</strong></div>
+            <div><span>Property secured</span><strong>{currentJob.property_secured ? "Yes" : "No"}</strong></div>
+            <div><span>Contractor paid</span><strong>{currentJob.contractor_paid ? "Yes" : "No"}</strong></div>
           </div>
-          <div style={{ marginTop: 14 }}><MetricRow customerPrice={job.customer_price} contractorCost={job.contractor_cost} /></div>
+          <div style={{ marginTop: 14 }}><MetricRow customerPrice={currentJob.customer_price} contractorCost={currentJob.contractor_cost} /></div>
           <h3>Photos / completion</h3>
           <div className="kv">
-            <div><span>Before photos</span><strong>{job.before_photos_link ? <a href={job.before_photos_link} target="_blank">Open</a> : "—"}</strong></div>
-            <div><span>After photos</span><strong>{job.after_photos_link ? <a href={job.after_photos_link} target="_blank">Open</a> : "—"}</strong></div>
+            <div><span>Before photos</span><strong>{currentJob.before_photos_link ? <a href={currentJob.before_photos_link} target="_blank">Open</a> : "—"}</strong></div>
+            <div><span>After photos</span><strong>{currentJob.after_photos_link ? <a href={currentJob.after_photos_link} target="_blank">Open</a> : "—"}</strong></div>
           </div>
         </section>
         <aside className="card">
           <h2 style={{ marginTop: 0 }}>Operator actions</h2>
-          <label>Assigned contractor<select value={job.selected_contractor_id || ""} onChange={(e) => assignContractor(e.target.value)}><option value="">Not assigned</option>{activeContractors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          <label>Assigned contractor<select value={currentJob.selected_contractor_id || ""} onChange={(e) => assignContractor(e.target.value)}><option value="">Not assigned</option>{activeContractors.map((c) => <option key={c.id} value={c.id}>{c.name} {c.rate_tier ? `(${c.rate_tier})` : ""}</option>)}</select></label>
+          {selectedContractor ? <div className="notice" style={{ marginTop: 12 }}>
+            <strong>{selectedContractor.name}</strong><br />
+            Tier: {selectedContractor.rate_tier || "Unrated"} · Priority: {selectedContractor.fulfilment_priority || "Reserve"}<br />
+            Suggested cost from rate card: {formatCurrency(suggestedContractorCost)}
+            {suggestedContractorCost ? <button className="button ghost" style={{ marginTop: 10 }} onClick={() => update({ contractor_cost: suggestedContractorCost }, "Contractor cost applied from rate card.")}>Apply suggested cost</button> : null}
+          </div> : null}
           <div className="actions-row" style={{ marginTop: 14 }}>
             <button className="button secondary" onClick={() => update({ contractor_confirmed: true, contractor_confirmation_time: new Date().toISOString(), job_status: "Contractor Assigned" }, "Contractor confirmed.")}>Contractor confirmed</button>
             <button className="button secondary" onClick={() => update({ job_status: "In Progress" }, "Job marked in progress.")}>In progress</button>
@@ -191,10 +223,10 @@ export default function JobDetailPage() {
             <button className="button ghost" onClick={() => update({ qa_status: "Re-clean Needed", payment_hold: true, job_status: "Completed - Awaiting QA" }, "Re-clean needed. Payment hold added.")}>Re-clean needed</button>
             <button className="button secondary" onClick={() => update({ customer_paid: true, payment_cleared: true, customer_payment_date: new Date().toISOString().slice(0,10) }, "Customer payment cleared.")}>Payment cleared</button>
             <button className="button" disabled={!canPay} onClick={() => update({ contractor_paid: true, contractor_payment_date: new Date().toISOString().slice(0,10) }, "Contractor marked paid.")}>Mark contractor paid</button>
-            <Link className="button danger" href={`/complaints/new?job_id=${job.id}`}>Log complaint</Link>
+            <Link className="button danger" href={`/complaints/new?job_id=${currentJob.id}`}>Log complaint</Link>
           </div>
           <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after payment cleared, completion evidence submitted, QA approved, property secured and no unresolved issue.</div>
-          <div className="notice" style={{ marginTop: 14 }}><strong>Contractor job completion form</strong><br />Send this job-specific link after the contractor is assigned.<br /><button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button></div>
+          <div className="notice" style={{ marginTop: 14 }}><strong>Contractor job completion form</strong><br />Send this job-specific link after the contractor is assigned.<br /><button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button><button className="button ghost" type="button" onClick={copyDispatchMessage} style={{ marginTop: 10 }}>Copy contractor dispatch message</button></div>
         </aside>
       </div>
 

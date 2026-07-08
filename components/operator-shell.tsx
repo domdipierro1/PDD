@@ -13,6 +13,7 @@ const nav = [
   { href: "/leads", label: "Leads" },
   { href: "/jobs", label: "Jobs" },
   { href: "/contractors", label: "Contractors" },
+  { href: "/contractor-pricing", label: "Rates" },
   { href: "/qa", label: "QA" },
   { href: "/payments", label: "Payments" },
   { href: "/finance", label: "Finance" },
