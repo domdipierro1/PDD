@@ -21,5 +21,8 @@
   },
   "overrides": {
     "postcss": "8.5.10"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }

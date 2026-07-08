@@ -22,6 +22,33 @@ After adding environment variables, redeploy the Vercel project.
 
 ---
 
+
+## Optional: Telegram alerts
+
+The portal can send Telegram alerts when any of these routes receive a valid submission:
+
+- `/api/website-enquiry`
+- `/api/contractor-onboarding`
+- `/api/job-completion`
+
+Add these in Vercel:
+
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+TELEGRAM_CHAT_ID=your_telegram_chat_id
+NEXT_PUBLIC_PORTAL_URL=https://your-vercel-app.vercel.app
+```
+
+Then redeploy. Test the connection with:
+
+```text
+https://YOUR-OPERATOR-APP.vercel.app/api/test-telegram?secret=YOUR_FORM_WEBHOOK_SECRET
+```
+
+The Telegram alert is a secondary notification only. The database record is still the source of truth.
+
+---
+
 ## 1. Website quote form → Leads
 
 Endpoint:

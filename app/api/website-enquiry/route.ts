@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { suggestedBaseQuote } from "@/lib/quote";
 import { createServiceSupabaseClient } from "@/lib/server-supabase";
 import { arrayValue, getReturnUrl, isHoneypotFilled, optionalText, readIncomingPayload, text } from "@/lib/form-ingest";
+import { compactLines, fieldLine, notifyTelegram, portalLink } from "@/lib/telegram";
 
 export async function POST(request: Request) {
   const payload = await readIncomingPayload(request);
@@ -45,6 +46,24 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+
+  await notifyTelegram(compactLines([
+    "🧽 New PDD Customer Enquiry",
+    "",
+    fieldLine("Name", lead.customer_name),
+    fieldLine("Phone", lead.phone),
+    fieldLine("Email", lead.email),
+    fieldLine("Service", lead.service_needed),
+    fieldLine("Property", lead.property_size),
+    fieldLine("Area/Postcode", lead.postcode),
+    fieldLine("Preferred date", lead.preferred_date),
+    fieldLine("Add-ons", lead.addons),
+    fieldLine("Suggested quote", lead.suggested_customer_quote ? `£${lead.suggested_customer_quote}` : null),
+    fieldLine("Message", lead.condition_notes),
+    "",
+    `Open lead: ${portalLink(`/leads/${data?.id}`)}`,
+    `All leads: ${portalLink("/leads")}`,
+  ]));
 
   if (returnUrl) return NextResponse.redirect(returnUrl, 303);
   return NextResponse.json({ ok: true, lead_id: data?.id });

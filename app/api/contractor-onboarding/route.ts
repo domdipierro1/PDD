@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/server-supabase";
 import { arrayValue, bool, dateValue, getReturnUrl, isHoneypotFilled, numberValue, optionalText, readIncomingPayload, text, verifyWebhookSecret } from "@/lib/form-ingest";
+import { compactLines, fieldLine, notifyTelegram, portalLink } from "@/lib/telegram";
 
 export async function POST(request: Request) {
   if (!verifyWebhookSecret(request)) {
@@ -79,6 +80,26 @@ export async function POST(request: Request) {
   if (data?.id && hasAnyRate) {
     await supabase.from("contractor_rates").insert(ratePayload);
   }
+
+  await notifyTelegram(compactLines([
+    "👷 New Contractor Application",
+    "",
+    fieldLine("Name", contractor.name),
+    fieldLine("Phone", contractor.phone),
+    fieldLine("Email", contractor.email),
+    fieldLine("Areas", contractor.areas_covered),
+    fieldLine("Transport", contractor.own_transport ? "Yes" : "No"),
+    fieldLine("Years experience", contractor.years_experience),
+    fieldLine("EOT/deep clean", contractor.eot_deep_clean_experience ? "Yes" : "No"),
+    fieldLine("HMRC status", contractor.hmrc_status),
+    fieldLine("Insurance", contractor.insurance_certificate_uploaded ? "Yes" : "No / not supplied"),
+    fieldLine("Right to work", contractor.id_right_to_work_uploaded ? "Supplied" : "Missing"),
+    fieldLine("Rate notes", contractor.rate_notes),
+    "",
+    "Next step: review docs, rates and suitability before any test job.",
+    `Open contractor: ${portalLink(`/contractors/${data?.id}`)}`,
+    `All contractors: ${portalLink("/contractors")}`,
+  ]));
 
   if (returnUrl) return NextResponse.redirect(returnUrl, 303);
   return NextResponse.json({ ok: true, contractor_id: data?.id });

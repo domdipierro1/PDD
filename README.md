@@ -80,9 +80,40 @@ SUPABASE_SERVICE_ROLE_KEY
 FORM_WEBHOOK_SECRET
 NEXT_PUBLIC_CONTRACTOR_ONBOARDING_FORM_URL
 NEXT_PUBLIC_CONTRACTOR_COMPLETION_FORM_URL
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+NEXT_PUBLIC_PORTAL_URL
 ```
 
 4. Deploy. The build expects the Supabase public URL and anon key to exist at build time.
+
+
+## Telegram notifications
+
+This version can send instant Telegram alerts when key public forms are submitted:
+
+- New customer quote request
+- New contractor onboarding/application
+- Contractor job completion submission
+- Urgent job completion review flags, such as missing photos, issue reported or property not confirmed secured
+
+Add these in **Vercel → Project → Settings → Environment Variables**:
+
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+TELEGRAM_CHAT_ID=your_telegram_chat_id
+NEXT_PUBLIC_PORTAL_URL=https://your-vercel-app.vercel.app
+```
+
+Keep `TELEGRAM_BOT_TOKEN` private. Do not put it in GitHub or any public website file.
+
+To test after deployment, open:
+
+```text
+https://YOUR-VERCEL-APP.vercel.app/api/test-telegram?secret=YOUR_FORM_WEBHOOK_SECRET
+```
+
+If it works, you will receive a Telegram message saying the PDD Telegram test was successful.
 
 ## Important operating rules built into the workflow
 

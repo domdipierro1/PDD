@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceSupabaseClient } from "@/lib/server-supabase";
 import { arrayValue, bool, dateValue, getReturnUrl, isHoneypotFilled, optionalText, readIncomingPayload, verifyWebhookSecret } from "@/lib/form-ingest";
+import { compactLines, fieldLine, notifyTelegram, portalLink } from "@/lib/telegram";
 
 function formatChecklist(title: string, items: string[]) {
   if (!items.length) return null;
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
     if (returnUrl) return NextResponse.redirect(returnUrl, 303);
     return NextResponse.json({ ok: true });
   }
+
   const jobId = url.searchParams.get("job_id") || optionalText(payload, ["job_id", "job id", "linked job id", "linked_job_id"]);
   const beforePhotos = optionalText(payload, ["before_photos", "before photos", "upload before photos", "before photo link"]);
   const afterPhotos = optionalText(payload, ["after_photos", "after photos", "upload after photos", "after photo link"]);
@@ -109,6 +111,33 @@ export async function POST(request: Request) {
 
     await supabase.from("jobs").update(updatePayload).eq("id", jobId);
   }
+
+  const completionProblems = [
+    anyIssues ? "Issue reported" : null,
+    !beforePhotos ? "Before photos missing" : null,
+    !afterPhotos ? "After photos missing" : null,
+    !propertySecured ? "Property not confirmed secured" : null,
+  ].filter(Boolean).join(", ");
+
+  await notifyTelegram(compactLines([
+    completionProblems ? "🚨 PDD Job Completion Needs Review" : "✅ PDD Job Completion Submitted",
+    "",
+    fieldLine("Contractor", submission.contractor_name),
+    fieldLine("Job address", submission.job_address),
+    fieldLine("Linked job ID", jobId),
+    fieldLine("Date completed", submission.date_completed),
+    fieldLine("Time completed", submission.time_completed),
+    fieldLine("Before photos", beforePhotos ? "Submitted" : "Missing"),
+    fieldLine("After photos", afterPhotos ? "Submitted" : "Missing"),
+    fieldLine("Issue reported", anyIssues ? "Yes" : "No"),
+    fieldLine("Issue details", issueDescription),
+    fieldLine("Property secured", propertySecured ? "Yes" : "No"),
+    fieldLine("Review flags", completionProblems || null),
+    "",
+    "Next step: QA review before contractor payment.",
+    jobId ? `Open job: ${portalLink(`/jobs/${jobId}`)}` : `Open QA: ${portalLink("/qa")}`,
+    `QA queue: ${portalLink("/qa")}`,
+  ]));
 
   if (returnUrl) return NextResponse.redirect(returnUrl, 303);
   return NextResponse.json({ ok: true, submission_id: data?.id, linked_job_id: jobId });
