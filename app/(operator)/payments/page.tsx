@@ -28,7 +28,7 @@ export default function PaymentsPage() {
   }, [jobs, view]);
   return (
     <>
-      <div className="page-head"><div><h1>Payments</h1><p>Control contractor payment release. Never pay before payment, completion, QA and issue checks are clear.</p></div></div>
+      <div className="page-head"><div><h1>Payments</h1><p>Control contractor payment release. Never pay before cleared customer payment, completion form, before/after photos, QA approval, secured property and issue/payment-hold checks are clear.</p></div></div>
       <div className="actions-row" style={{ marginBottom: 16 }}>{["Due", "Holds", "Unpaid Customer", "All"].map((item) => <button key={item} className={`button ${view === item ? "" : "ghost"}`} onClick={() => setView(item)}>{item}</button>)}</div>
       {loading ? <div className="notice">Loading payments…</div> : null}
       {filtered.length === 0 ? <EmptyState title="No payment items" body="Safe-to-pay jobs and payment holds will show here." /> : (

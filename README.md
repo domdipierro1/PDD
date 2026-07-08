@@ -46,10 +46,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 
 1. Create a Supabase project.
 2. Go to **SQL Editor**.
-3. Paste and run:
+3. Paste and run each migration in order:
 
 ```text
 supabase/migrations/001_initial_schema.sql
+supabase/migrations/002_documents_photos_finance.sql
+supabase/migrations/003_contractor_rate_pipeline.sql
+supabase/migrations/004_core_rls_security.sql
 ```
 
 4. Go to **Authentication > Users** and create your operator user.
@@ -67,22 +70,28 @@ values ('PASTE-YOUR-AUTH-USER-UUID-HERE', 'your-email@example.com', 'Dom', true)
 
 1. Push this folder to GitHub.
 2. Import the GitHub repo into Vercel.
-3. Add these environment variables in Vercel:
+3. Add these environment variables in Vercel before the first build:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 NEXT_PUBLIC_APP_NAME
+SUPABASE_SERVICE_ROLE_KEY
+FORM_WEBHOOK_SECRET
+NEXT_PUBLIC_CONTRACTOR_ONBOARDING_FORM_URL
+NEXT_PUBLIC_CONTRACTOR_COMPLETION_FORM_URL
 ```
 
-4. Deploy.
+4. Deploy. The build expects the Supabase public URL and anon key to exist at build time.
 
 ## Important operating rules built into the workflow
 
 Contractor payment should only be treated as due when all are true:
 
 - Customer payment cleared
-- Completion form/photos submitted
+- Completion form submitted
+- Before photos link present
+- After photos link present
 - QA approved
 - Property secured
 - No payment hold

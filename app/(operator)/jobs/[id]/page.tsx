@@ -257,7 +257,7 @@ Please confirm whether you can accept this job. Before/after photos and the comp
             <button className="button" disabled={!canPay} onClick={() => update({ contractor_paid: true, contractor_payment_date: new Date().toISOString().slice(0,10) }, "Contractor marked paid.")}>Mark contractor paid</button>
             <Link className="button danger" href={`/complaints/new?job_id=${currentJob.id}`}>Log complaint</Link>
           </div>
-          <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after payment cleared, completion evidence submitted, QA approved, property secured and no unresolved issue.</div>
+          <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after customer payment has cleared, completion form is submitted, before/after photo links are present, QA is approved, the property is secured and no unresolved issue/payment hold exists.</div>
           <div className="notice" style={{ marginTop: 14 }}><strong>Contractor job completion form</strong><br />Send this job-specific link after the contractor is assigned.<br /><button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button><button className="button ghost" type="button" onClick={copyDispatchMessage} style={{ marginTop: 10 }}>Copy contractor dispatch message</button></div>
           <div className="notice bad" style={{ marginTop: 14 }}>
             <strong>Danger zone</strong><br />
