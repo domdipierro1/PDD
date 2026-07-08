@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import { MetricRow } from "@/components/metric-row";
@@ -13,6 +13,7 @@ import { estimatedRateForProperty } from "@/lib/rates";
 
 export default function JobDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -126,6 +127,37 @@ export default function JobDetailPage() {
     await load();
   }
 
+  async function deleteJob() {
+    if (!job) return;
+    const confirmed = window.confirm("Delete this job? This cannot be undone. Linked documents, photo links, finance items, completion submissions and complaints for this job will also be removed where possible.");
+    if (!confirmed) return;
+    const typed = window.prompt("Type DELETE to confirm deleting this job.");
+    if (typed !== "DELETE") {
+      setMessage("Delete cancelled.");
+      return;
+    }
+
+    const optionalDeletes = [
+      supabase.from("job_documents").delete().eq("job_id", job.id),
+      supabase.from("job_photos").delete().eq("job_id", job.id),
+      supabase.from("finance_items").delete().eq("job_id", job.id),
+      supabase.from("complaints").delete().eq("job_id", job.id),
+      supabase.from("job_completion_submissions").delete().or(`job_id.eq.${job.id},linked_job_id.eq.${job.id}`),
+    ];
+
+    for (const request of optionalDeletes) {
+      const { error: optionalError } = await request;
+      if (optionalError && !(optionalError.message.includes("does not exist") || optionalError.message.includes("Could not find the table"))) {
+        setError(optionalError.message);
+        return;
+      }
+    }
+
+    const { error: deleteError } = await supabase.from("jobs").delete().eq("id", job.id);
+    if (deleteError) return setError(deleteError.message);
+    router.push("/jobs");
+  }
+
   if (error) return <div className="notice bad">{error}</div>;
   if (!job) return <div className="notice">Loading job…</div>;
   const currentJob = job;
@@ -227,6 +259,11 @@ Please confirm whether you can accept this job. Before/after photos and the comp
           </div>
           <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after payment cleared, completion evidence submitted, QA approved, property secured and no unresolved issue.</div>
           <div className="notice" style={{ marginTop: 14 }}><strong>Contractor job completion form</strong><br />Send this job-specific link after the contractor is assigned.<br /><button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button><button className="button ghost" type="button" onClick={copyDispatchMessage} style={{ marginTop: 10 }}>Copy contractor dispatch message</button></div>
+          <div className="notice bad" style={{ marginTop: 14 }}>
+            <strong>Danger zone</strong><br />
+            Delete this job only if it was created by mistake or is a duplicate. This removes linked internal records where possible.
+            <button className="button danger full" type="button" style={{ marginTop: 10 }} onClick={deleteJob}>Delete job</button>
+          </div>
         </aside>
       </div>
 

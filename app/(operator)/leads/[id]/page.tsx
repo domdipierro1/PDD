@@ -45,6 +45,34 @@ export default function LeadDetailPage() {
     await load();
   }
 
+  async function deleteLead() {
+    if (!lead) return;
+    const confirmed = window.confirm("Delete this lead? This cannot be undone. Any job already created from this lead will stay in Jobs, but it will no longer be linked to this lead.");
+    if (!confirmed) return;
+    const typed = window.prompt("Type DELETE to confirm deleting this lead.");
+    if (typed !== "DELETE") {
+      setMessage("Delete cancelled.");
+      return;
+    }
+
+    const optionalDeletes = [
+      supabase.from("job_documents").delete().eq("lead_id", lead.id),
+      supabase.from("finance_items").delete().eq("lead_id", lead.id),
+    ];
+
+    for (const request of optionalDeletes) {
+      const { error: optionalError } = await request;
+      if (optionalError && !(optionalError.message.includes("does not exist") || optionalError.message.includes("Could not find the table"))) {
+        setError(optionalError.message);
+        return;
+      }
+    }
+
+    const { error: deleteError } = await supabase.from("leads").delete().eq("id", lead.id);
+    if (deleteError) return setError(deleteError.message);
+    router.push("/leads");
+  }
+
   async function convertToJob() {
     if (!lead) return;
     const payload = {
@@ -114,6 +142,11 @@ export default function LeadDetailPage() {
           <div className="notice warn" style={{ marginTop: 14 }}>Do not confirm a live job to the customer until contractor availability is confirmed.</div>
           <button className="button full" style={{ marginTop: 14 }} onClick={convertToJob}>Create job from lead</button>
           <Link className="button ghost full" style={{ marginTop: 10 }} href="/contractors/new">Add contractor</Link>
+          <div className="notice bad" style={{ marginTop: 14 }}>
+            <strong>Danger zone</strong><br />
+            Delete this lead only if it was created by mistake or is a duplicate. Jobs already created from this lead will stay in Jobs.
+            <button className="button danger full" type="button" style={{ marginTop: 10 }} onClick={deleteLead}>Delete lead</button>
+          </div>
         </aside>
       </div>
     </>
