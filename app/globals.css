@@ -286,10 +286,3 @@ input:focus, select:focus, textarea:focus { border-color: var(--green); box-shad
   background: var(--green-soft);
   color: var(--green-dark);
 }
-
-.grid-5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
-.table-wrap { width: 100%; overflow-x: auto; }
-.data-table { width: 100%; border-collapse: collapse; min-width: 860px; }
-.data-table th, .data-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
-.data-table th { color: var(--grey); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
-@media (max-width: 920px) { .grid-5 { grid-template-columns: 1fr; } }

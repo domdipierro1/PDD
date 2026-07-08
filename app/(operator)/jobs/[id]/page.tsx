@@ -6,10 +6,9 @@ import { FormEvent, useEffect, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import { MetricRow } from "@/components/metric-row";
 import { supabase } from "@/lib/supabase";
-import type { Job, Contractor, ContractorRate, Complaint, JobDocument, JobPhoto, FinanceItem } from "@/lib/types";
+import type { Job, Contractor, Complaint, JobDocument, JobPhoto, FinanceItem } from "@/lib/types";
 import { contractorPaymentDue } from "@/lib/quote";
 import { formatDate, formatCurrency, toBool, toMoney } from "@/lib/utils";
-import { estimatedRateForProperty } from "@/lib/rates";
 
 export default function JobDetailPage() {
   const params = useParams<{ id: string }>();
@@ -19,19 +18,17 @@ export default function JobDetailPage() {
   const [documents, setDocuments] = useState<JobDocument[]>([]);
   const [photos, setPhotos] = useState<JobPhoto[]>([]);
   const [financeItems, setFinanceItems] = useState<FinanceItem[]>([]);
-  const [contractorRates, setContractorRates] = useState<ContractorRate[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const [jobRes, contractorRes, complaintRes, docRes, photoRes, financeRes, rateRes] = await Promise.all([
+    const [jobRes, contractorRes, complaintRes, docRes, photoRes, financeRes] = await Promise.all([
       supabase.from("jobs").select("*").eq("id", params.id).single(),
       supabase.from("contractors").select("*").order("name", { ascending: true }),
       supabase.from("complaints").select("*").eq("job_id", params.id).order("date_opened", { ascending: false }),
       supabase.from("job_documents").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
       supabase.from("job_photos").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
       supabase.from("finance_items").select("*").eq("job_id", params.id).order("created_at", { ascending: false }),
-      supabase.from("contractor_rates").select("*").order("effective_from", { ascending: false }),
     ]);
     if (jobRes.error) setError(jobRes.error.message);
     setJob(jobRes.data as Job);
@@ -40,7 +37,6 @@ export default function JobDetailPage() {
     if (!docRes.error) setDocuments((docRes.data || []) as JobDocument[]);
     if (!photoRes.error) setPhotos((photoRes.data || []) as JobPhoto[]);
     if (!financeRes.error) setFinanceItems((financeRes.data || []) as FinanceItem[]);
-    if (!rateRes.error) setContractorRates((rateRes.data || []) as ContractorRate[]);
   }
 
   useEffect(() => { load(); }, [params.id]);
@@ -132,8 +128,6 @@ export default function JobDetailPage() {
   const canPay = contractorPaymentDue(job);
   const openComplaints = complaints.filter((c) => c.complaint_status !== "Closed");
   const selectedContractor = contractors.find((c) => c.id === job.selected_contractor_id);
-  const selectedContractorRate = contractorRates.find((rate) => rate.contractor_id === job.selected_contractor_id) || null;
-  const suggestedContractorCost = estimatedRateForProperty(selectedContractorRate, job.property_size);
   const completionFormLink = `/job-completion?${new URLSearchParams({
     job_id: job.id,
     job_address: job.job_address || "",
@@ -149,25 +143,6 @@ export default function JobDetailPage() {
     const absolute = `${window.location.origin}${completionFormLink}`;
     await navigator.clipboard.writeText(absolute);
     setMessage("Contractor completion form link copied.");
-  }
-
-  async function copyDispatchMessage() {
-    const absoluteCompletionLink = `${window.location.origin}${completionFormLink}`;
-    const text = `Hi ${selectedContractor?.name || ""}, we have a job available.
-
-Service: ${job.service_needed || "Cleaning"}
-Property: ${job.property_size || "Property"}
-Date: ${formatDate(job.job_date)}
-Arrival window: ${job.arrival_window || "To confirm"}
-Address: ${job.job_address || "To confirm"}
-Add-ons: ${job.addons?.length ? job.addons.join(", ") : "None"}
-Access: ${job.access_notes || "To confirm"}
-Parking: ${job.parking_notes || "To confirm"}
-Your rate: ${formatCurrency(job.contractor_cost || suggestedContractorCost)}
-
-Please confirm whether you can accept this job. Before/after photos and the completion checklist are required after the clean. Completion form: ${absoluteCompletionLink}`;
-    await navigator.clipboard.writeText(text);
-    setMessage("Contractor dispatch message copied.");
   }
 
   return (
@@ -206,13 +181,7 @@ Please confirm whether you can accept this job. Before/after photos and the comp
         </section>
         <aside className="card">
           <h2 style={{ marginTop: 0 }}>Operator actions</h2>
-          <label>Assigned contractor<select value={job.selected_contractor_id || ""} onChange={(e) => assignContractor(e.target.value)}><option value="">Not assigned</option>{activeContractors.map((c) => <option key={c.id} value={c.id}>{c.name} {c.rate_tier ? `(${c.rate_tier})` : ""}</option>)}</select></label>
-          {selectedContractor ? <div className="notice" style={{ marginTop: 12 }}>
-            <strong>{selectedContractor.name}</strong><br />
-            Tier: {selectedContractor.rate_tier || "Unrated"} · Priority: {selectedContractor.fulfilment_priority || "Reserve"}<br />
-            Suggested cost from rate card: {formatCurrency(suggestedContractorCost)}
-            {suggestedContractorCost ? <button className="button ghost" style={{ marginTop: 10 }} onClick={() => update({ contractor_cost: suggestedContractorCost }, "Contractor cost applied from rate card.")}>Apply suggested cost</button> : null}
-          </div> : null}
+          <label>Assigned contractor<select value={job.selected_contractor_id || ""} onChange={(e) => assignContractor(e.target.value)}><option value="">Not assigned</option>{activeContractors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
           <div className="actions-row" style={{ marginTop: 14 }}>
             <button className="button secondary" onClick={() => update({ contractor_confirmed: true, contractor_confirmation_time: new Date().toISOString(), job_status: "Contractor Assigned" }, "Contractor confirmed.")}>Contractor confirmed</button>
             <button className="button secondary" onClick={() => update({ job_status: "In Progress" }, "Job marked in progress.")}>In progress</button>
@@ -225,7 +194,7 @@ Please confirm whether you can accept this job. Before/after photos and the comp
             <Link className="button danger" href={`/complaints/new?job_id=${job.id}`}>Log complaint</Link>
           </div>
           <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after payment cleared, completion evidence submitted, QA approved, property secured and no unresolved issue.</div>
-          <div className="notice" style={{ marginTop: 14 }}><strong>Contractor job completion form</strong><br />Send this job-specific link after the contractor is assigned.<br /><button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button><button className="button ghost" type="button" onClick={copyDispatchMessage} style={{ marginTop: 10 }}>Copy contractor dispatch message</button></div>
+          <div className="notice" style={{ marginTop: 14 }}><strong>Contractor job completion form</strong><br />Send this job-specific link after the contractor is assigned.<br /><button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button></div>
         </aside>
       </div>
 

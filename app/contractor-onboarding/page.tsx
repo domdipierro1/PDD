@@ -20,22 +20,7 @@ export default function ContractorOnboardingPage() {
           <label>Insurance expiry date<input name="insurance expiry date" type="date" /></label>
           <label className="full">Insurance certificate link <span className="help">Google Drive, Dropbox or other secure link for now.</span><input name="insurance file" placeholder="https://..." /></label>
           <label className="full">Right-to-work / ID link <span className="help">Secure link for now. Do not send by public comment or social media.</span><input name="right to work" placeholder="https://..." /></label>
-          <label>Willing to do a paid trial/live trial?<select name="willing to do a paid test job"><option>Yes</option><option>No</option></select></label>
-          <fieldset className="checklist-group full">
-            <legend>Your usual rates</legend>
-            <p className="help checklist-help">Please put what you would normally charge. PDD confirms the exact job and rate before you accept any work.</p>
-            <div className="form-grid">
-              <label>Studio EOT<input name="studio rate" inputMode="decimal" placeholder="e.g. 60" /></label>
-              <label>1 Bed EOT<input name="1 bed rate" inputMode="decimal" placeholder="e.g. 100" /></label>
-              <label>2 Bed EOT<input name="2 bed rate" inputMode="decimal" placeholder="e.g. 160" /></label>
-              <label>3 Bed EOT<input name="3 bed rate" inputMode="decimal" placeholder="e.g. 200" /></label>
-              <label>4 Bed+ EOT<input name="4 bed rate" inputMode="decimal" placeholder="Agreed per job" /></label>
-              <label>Deep clean hourly<input name="deep clean hourly rate" inputMode="decimal" placeholder="e.g. 20" /></label>
-              <label>Single oven<input name="single oven rate" inputMode="decimal" /></label>
-              <label>Double oven<input name="double oven rate" inputMode="decimal" /></label>
-            </div>
-          </fieldset>
-          <label className="full">Rate notes<textarea name="rate notes" placeholder="Any extra charges, travel limits, parking, equipment, team size, etc." /></label>
+          <label>Willing to do a paid test job?<select name="willing to do a paid test job"><option>Yes</option><option>No</option></select></label>
           <label className="full">Describe your experience<textarea name="describe experience" /></label>
           <label className="full">Anything else?<textarea name="anything else" /></label>
           <div className="full"><button className="button" type="submit">Submit contractor details</button></div>
