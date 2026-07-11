@@ -38,6 +38,14 @@ export default function LeadDetailPage() {
     await load();
   }
 
+  async function updateLead(values: Record<string, unknown>, success: string) {
+    if (!lead) return;
+    const { error: updateError } = await supabase.from("leads").update(values).eq("id", lead.id);
+    if (updateError) return setError(updateError.message);
+    setMessage(success);
+    await load();
+  }
+
   async function assignContractor(contractorId: string) {
     if (!lead) return;
     const { error: updateError } = await supabase.from("leads").update({ selected_contractor_id: contractorId || null }).eq("id", lead.id);
@@ -89,10 +97,34 @@ export default function LeadDetailPage() {
       access_notes: lead.access_notes,
       parking_notes: lead.parking_notes,
       selected_contractor_id: lead.selected_contractor_id,
-      job_status: lead.selected_contractor_id ? "Contractor Assigned" : "Contractor Needed",
+      job_status: lead.selected_contractor_id ? "Contractor Confirmed" : "Contractor Needed",
       qa_status: "Not Started",
-      customer_price: lead.customer_quote || lead.suggested_customer_quote || null,
+      customer_price: lead.customer_quote || lead.quote_amount || lead.suggested_customer_quote || null,
       contractor_cost: lead.contractor_cost_estimate,
+      quote_amount: lead.quote_amount || lead.customer_quote || lead.suggested_customer_quote || null,
+      deposit_required: lead.deposit_required || false,
+      deposit_amount: lead.deposit_amount || null,
+      deposit_payment_method: lead.deposit_payment_method || "Stripe",
+      deposit_payment_link: lead.deposit_payment_link || null,
+      deposit_link_sent_date: lead.deposit_link_sent_date || null,
+      deposit_paid: lead.deposit_paid || false,
+      deposit_paid_date: lead.deposit_paid_date || null,
+      balance_amount: lead.balance_amount || null,
+      balance_payment_link: lead.balance_payment_link || null,
+      balance_link_sent_date: lead.balance_link_sent_date || null,
+      balance_paid: lead.balance_paid || false,
+      balance_paid_date: lead.balance_paid_date || null,
+      full_payment_required: lead.full_payment_required ?? true,
+      full_payment_link: lead.full_payment_link || null,
+      full_payment_paid: lead.full_payment_paid || false,
+      stripe_payment_id: lead.stripe_payment_id || null,
+      stripe_checkout_session_id: lead.stripe_checkout_session_id || null,
+      payment_notes: lead.payment_notes || null,
+      payment_hold: lead.payment_hold || false,
+      payment_hold_reason: lead.payment_hold_reason || null,
+      customer_paid: Boolean(lead.full_payment_paid || (lead.deposit_paid && lead.balance_paid)),
+      payment_cleared: Boolean(lead.full_payment_paid || (lead.deposit_paid && lead.balance_paid)),
+      customer_payment_date: lead.full_payment_paid ? new Date().toISOString().slice(0,10) : null,
       notes: lead.notes,
     };
     const { data, error: insertError } = await supabase.from("jobs").insert(payload).select("id").single();
@@ -125,6 +157,14 @@ export default function LeadDetailPage() {
             <div><span>Suggested quote</span><strong>{formatCurrency(lead.suggested_customer_quote || suggestedBaseQuote(lead.property_size))}</strong></div>
             <div><span>Customer quote</span><strong>{formatCurrency(lead.customer_quote)}</strong></div>
             <div><span>Contractor estimate</span><strong>{formatCurrency(lead.contractor_cost_estimate)}</strong></div>
+            <div><span>Full payment required</span><strong>{lead.full_payment_required === false ? "No" : "Yes"}</strong></div>
+            <div><span>Deposit required</span><strong>{lead.deposit_required ? "Yes" : "No"}</strong></div>
+            <div><span>Deposit amount</span><strong>{formatCurrency(lead.deposit_amount)}</strong></div>
+            <div><span>Balance amount</span><strong>{formatCurrency(lead.balance_amount)}</strong></div>
+            <div><span>Full payment link</span><strong>{lead.full_payment_link ? <a href={lead.full_payment_link} target="_blank">Open</a> : "—"}</strong></div>
+            <div><span>Deposit link</span><strong>{lead.deposit_payment_link ? <a href={lead.deposit_payment_link} target="_blank">Open</a> : "—"}</strong></div>
+            <div><span>Deposit paid</span><strong>{lead.deposit_paid ? "Yes" : "No"}</strong></div>
+            <div><span>Full payment paid</span><strong>{lead.full_payment_paid ? "Yes" : "No"}</strong></div>
           </div>
           <div style={{ marginTop: 14 }}><MetricRow customerPrice={lead.customer_quote || lead.suggested_customer_quote} contractorCost={lead.contractor_cost_estimate} /></div>
           <h3>Generated quote message</h3>
@@ -133,13 +173,19 @@ export default function LeadDetailPage() {
             <button className="button" onClick={() => navigator.clipboard.writeText(quoteMessage(lead)).then(() => setMessage("Quote message copied."))}>Copy quote message</button>
             <button className="button secondary" onClick={() => setStatus("Quote Sent", { quote_sent_at: new Date().toISOString() })}>Mark quote sent</button>
             <button className="button secondary" onClick={() => setStatus("Follow Up Needed", { follow_up_date: new Date(Date.now() + 86400000).toISOString().slice(0,10) })}>Follow up tomorrow</button>
-            <button className="button ghost" onClick={() => setStatus("Lost")}>Mark lost</button>
+            <button className="button ghost" onClick={() => setStatus("Lost / Not Proceeding")}>Mark lost</button>
+            <button className="button secondary" onClick={() => setStatus("Quote Accepted")}>Quote accepted</button>
+            <button className="button secondary" onClick={() => setStatus("Payment Link Needed")}>Payment link needed</button>
+            <button className="button secondary" onClick={() => updateLead({ quote_status: "Payment Link Sent", deposit_link_sent_date: new Date().toISOString().slice(0,10), balance_link_sent_date: lead.balance_payment_link ? new Date().toISOString().slice(0,10) : null }, "Payment link marked sent.")}>Payment link sent</button>
+            <button className="button secondary" onClick={() => updateLead({ quote_status: "Deposit Paid", deposit_paid: true, deposit_paid_date: new Date().toISOString().slice(0,10) }, "Deposit marked paid.")}>Deposit paid</button>
+            <button className="button" onClick={() => updateLead({ quote_status: "Fully Paid", full_payment_paid: true }, "Full payment marked paid.")}>Fully paid</button>
           </div>
         </section>
         <aside className="card">
           <h2 style={{ marginTop: 0 }}>Convert to job</h2>
           <label>Suggested contractor<select value={lead.selected_contractor_id || ""} onChange={(e) => assignContractor(e.target.value)}><option value="">Not assigned yet</option>{activeContractors.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-          <div className="notice warn" style={{ marginTop: 14 }}>Do not confirm a live job to the customer until contractor availability is confirmed.</div>
+          <div className="notice warn" style={{ marginTop: 14 }}>Preferred policy: full payment before the clean starts. Deposit + balance is allowed for early trust-building, but balance should be cleared before the contractor starts unless Dom manually approves.</div>
+          <div className="notice warn" style={{ marginTop: 14 }}>Do not confirm a live job to the customer until contractor availability and required payment are confirmed.</div>
           <button className="button full" style={{ marginTop: 14 }} onClick={convertToJob}>Create job from lead</button>
           <Link className="button ghost full" style={{ marginTop: 10 }} href="/contractors/new">Add contractor</Link>
           <div className="notice bad" style={{ marginTop: 14 }}>

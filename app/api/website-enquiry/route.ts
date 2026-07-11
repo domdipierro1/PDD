@@ -17,12 +17,18 @@ export async function POST(request: Request) {
   const propertySize = optionalText(payload, ["property_size", "property size", "property", "size"]);
   const serviceNeeded = optionalText(payload, ["service_needed", "service needed", "service", "cleaning service"]);
   const message = optionalText(payload, ["message", "notes", "details", "condition_notes", "property condition"]);
+  const address = optionalText(payload, ["address", "selected_address", "full_address", "full address", "property address", "job address"]);
+  const addressParts = [
+    optionalText(payload, ["address_line_1", "address line 1", "line1", "street_address", "street address"]),
+    optionalText(payload, ["address_line_2", "address line 2", "line2"]),
+    optionalText(payload, ["city", "town", "locality"]),
+  ].filter(Boolean).join(", ");
 
   const lead = {
     customer_name: text(payload, ["customer_name", "customer name", "name", "full name"], "Website enquiry"),
     phone: optionalText(payload, ["phone", "phone number", "mobile", "telephone"]),
     email: optionalText(payload, ["email", "email address"]),
-    address: optionalText(payload, ["address", "property address", "job address"]),
+    address: address || addressParts || null,
     postcode: optionalText(payload, ["postcode", "postcode_area", "postcode / area", "area", "location"]),
     property_size: propertySize,
     service_needed: serviceNeeded,
@@ -34,6 +40,9 @@ export async function POST(request: Request) {
     lead_source: text(payload, ["lead_source", "lead source", "source"], "Website"),
     quote_status: "Quote Needed",
     suggested_customer_quote: suggestedBaseQuote(propertySize || "") || null,
+    quote_amount: suggestedBaseQuote(propertySize || "") || null,
+    full_payment_required: true,
+    deposit_required: false,
     notes: [
       "Created automatically from website enquiry form.",
       optionalText(payload, ["contact_consent", "consent"]) ? `Consent: ${optionalText(payload, ["contact_consent", "consent"])}` : null,
@@ -55,6 +64,7 @@ export async function POST(request: Request) {
     fieldLine("Email", lead.email),
     fieldLine("Service", lead.service_needed),
     fieldLine("Property", lead.property_size),
+    fieldLine("Address", lead.address),
     fieldLine("Area/Postcode", lead.postcode),
     fieldLine("Preferred date", lead.preferred_date),
     fieldLine("Add-ons", lead.addons),

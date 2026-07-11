@@ -33,6 +33,28 @@ export type Lead = {
   follow_up_date: string | null;
   lost_reason: string | null;
   notes: string | null;
+  quote_amount?: number | null;
+  deposit_required?: boolean | null;
+  deposit_amount?: number | null;
+  deposit_payment_method?: string | null;
+  deposit_payment_link?: string | null;
+  deposit_link_sent_date?: string | null;
+  deposit_paid?: boolean | null;
+  deposit_paid_date?: string | null;
+  balance_amount?: number | null;
+  balance_payment_link?: string | null;
+  balance_link_sent_date?: string | null;
+  balance_paid?: boolean | null;
+  balance_paid_date?: string | null;
+  full_payment_required?: boolean | null;
+  full_payment_link?: string | null;
+  full_payment_paid?: boolean | null;
+  stripe_payment_id?: string | null;
+  stripe_checkout_session_id?: string | null;
+  payment_notes?: string | null;
+  payment_hold?: boolean | null;
+  payment_hold_reason?: string | null;
+  contractor_payment_eligible?: boolean | null;
 };
 
 export type Contractor = {
@@ -147,6 +169,36 @@ export type Job = {
   contractor_job_sheet_link?: string | null;
   job_folder_link?: string | null;
   notes: string | null;
+  quote_amount?: number | null;
+  deposit_required?: boolean | null;
+  deposit_amount?: number | null;
+  deposit_payment_method?: string | null;
+  deposit_payment_link?: string | null;
+  deposit_link_sent_date?: string | null;
+  deposit_paid?: boolean | null;
+  deposit_paid_date?: string | null;
+  balance_amount?: number | null;
+  balance_payment_link?: string | null;
+  balance_link_sent_date?: string | null;
+  balance_paid?: boolean | null;
+  balance_paid_date?: string | null;
+  full_payment_required?: boolean | null;
+  full_payment_link?: string | null;
+  full_payment_paid?: boolean | null;
+  stripe_payment_id?: string | null;
+  stripe_checkout_session_id?: string | null;
+  payment_notes?: string | null;
+  contractor_payment_eligible?: boolean | null;
+  review_request_sent?: boolean | null;
+  review_request_sent_date?: string | null;
+  review_follow_up_sent?: boolean | null;
+  review_follow_up_date?: string | null;
+  review_received?: boolean | null;
+  review_platform?: string | null;
+  review_name?: string | null;
+  review_rating?: number | null;
+  review_notes?: string | null;
+  issue_resolved_before_review_request?: boolean | null;
 };
 
 export type Complaint = {
@@ -243,6 +295,28 @@ export type JobPhoto = {
   notes: string | null;
 };
 
+
+export type BusinessSettings = {
+  id: string;
+  created_at: string;
+  updated_at: string | null;
+  legal_company_name: string | null;
+  trading_name: string | null;
+  company_number: string | null;
+  registered_office_address: string | null;
+  actual_trading_admin_address: string | null;
+  business_email: string | null;
+  admin_backup_email: string | null;
+  phone_number: string | null;
+  tide_account_status: string | null;
+  stripe_account_status: string | null;
+  insurance_status: string | null;
+  companies_house_auth_code_stored_securely: boolean | null;
+  hmrc_utr_received: boolean | null;
+  corporation_tax_setup_status: string | null;
+  notes: string | null;
+};
+
 export type FinanceItem = {
   id: string;
   created_at: string;
@@ -289,6 +363,7 @@ export type Database = {
       job_photos: Tables<JobPhoto>;
       finance_items: Tables<FinanceItem>;
       audit_log: Tables<AuditLogItem>;
+      business_settings: Tables<BusinessSettings>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

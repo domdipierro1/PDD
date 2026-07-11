@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { supabase } from "@/lib/supabase";
 import type { FinanceItem, Job } from "@/lib/types";
 import { formatCurrency, formatDate, toMoney } from "@/lib/utils";
+import { contractorPaymentDue } from "@/lib/quote";
 
 export default function FinancePage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -51,7 +52,7 @@ export default function FinancePage() {
   const grossProfit = totalRevenue - totalCosts;
   const margin = totalRevenue ? (grossProfit / totalRevenue) * 100 : 0;
   const unpaidCustomer = scopedJobs.filter((job) => !job.payment_cleared).reduce((sum, job) => sum + Number(job.customer_price || 0), 0);
-  const contractorDue = scopedJobs.filter((job) => job.payment_cleared && job.completion_form_submitted && job.qa_status === "QA Approved" && !job.contractor_paid && !job.payment_hold).reduce((sum, job) => sum + Number(job.contractor_cost || 0), 0);
+  const contractorDue = scopedJobs.filter(contractorPaymentDue).reduce((sum, job) => sum + Number(job.contractor_cost || 0), 0);
 
   async function addItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

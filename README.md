@@ -185,3 +185,21 @@ Contractors still do not receive app access.
 ## Job completion checklist update
 
 The built-in `/job-completion` contractor form now includes required room-by-room checklist checkboxes for kitchen, bathroom(s), bedrooms/living areas, general finish/security, optional add-ons, before/after photo links, issue notes and contractor notes. The submitted checklist is saved into the job completion notes and moves the job into Awaiting QA.
+
+## v5.5 CRM/AppSheet Process Update
+
+Run this migration after the earlier migrations:
+
+```sql
+supabase/migrations/005_business_payments_reviews.sql
+```
+
+v5.5 adds:
+
+- Business Details / Company Settings table and page.
+- Stripe/Tide/deposit/balance/full-payment tracking fields on leads and jobs.
+- Review tracking fields and Reviews queue.
+- Updated job status options for the new quote → payment → fulfilment → review → close process.
+- Launch readiness checklist items for insurance, contractor proof-test, Stripe, QA, completion form, review link and complaint process.
+
+Important: do not store the actual Companies House authentication code or Stripe secret keys inside CRM tables. Store only secure-status flags inside the CRM.

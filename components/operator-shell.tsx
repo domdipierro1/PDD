@@ -10,12 +10,14 @@ import { classNames } from "@/lib/utils";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/company-settings", label: "Company" },
   { href: "/leads", label: "Leads" },
   { href: "/jobs", label: "Jobs" },
   { href: "/contractors", label: "Contractors" },
   { href: "/contractor-pricing", label: "Rates" },
   { href: "/qa", label: "QA" },
   { href: "/payments", label: "Payments" },
+  { href: "/reviews", label: "Reviews" },
   { href: "/finance", label: "Finance" },
   { href: "/records", label: "Records" },
   { href: "/forms", label: "Forms" },
