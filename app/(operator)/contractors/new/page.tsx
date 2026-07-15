@@ -24,8 +24,15 @@ export default function NewContractorPage() {
       own_transport: toBool(form.get("own_transport")),
       years_experience: form.get("years_experience") ? Number(form.get("years_experience")) : null,
       eot_deep_clean_experience: toBool(form.get("eot_deep_clean_experience")),
+      services_offered: String(form.get("services_offered") || "").trim() || null,
+      end_of_tenancy_experience: toBool(form.get("end_of_tenancy_experience")),
+      deep_clean_experience: toBool(form.get("deep_clean_experience")),
+      after_builders_experience: toBool(form.get("after_builders_experience")),
+      oven_window_carpet_experience: String(form.get("oven_window_carpet_experience") || "").trim() || null,
+      self_employed_status: String(form.get("hmrc_status") || "Not Sure"),
       hmrc_status: String(form.get("hmrc_status") || "Not Sure"),
       insurance_certificate_uploaded: toBool(form.get("insurance_certificate_uploaded")),
+      public_liability_received: toBool(form.get("insurance_certificate_uploaded")),
       insurance_file_link: String(form.get("insurance_file_link") || "").trim() || null,
       insurance_expiry_date: String(form.get("insurance_expiry_date") || "") || null,
       insurance_cover_amount: toMoney(form.get("insurance_cover_amount")),
@@ -74,6 +81,7 @@ export default function NewContractorPage() {
         <label>Email<input name="email" type="email" /></label>
         <label>Years experience<input name="years_experience" type="number" min="0" /></label>
         <label className="full">Areas covered<input name="areas_covered" placeholder="Southgate, Palmers Green, Wood Green" /></label>
+        <label className="full">Services offered<input name="services_offered" placeholder="End of tenancy, deep clean, after builders, oven, windows, carpet" /></label>
         <label>HMRC/self-employed status<select name="hmrc_status">{hmrcStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label>DBS status<select name="dbs_status">{dbsStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label>Rate tier<select name="rate_tier">{rateTiers.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -81,6 +89,10 @@ export default function NewContractorPage() {
         <label>Rate discovery<select name="rate_discovery_status">{rateDiscoveryStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label><span>Own transport?</span><input name="own_transport" type="checkbox" /></label>
         <label><span>EOT/deep clean experience?</span><input name="eot_deep_clean_experience" type="checkbox" /></label>
+        <label><span>End of tenancy experience?</span><input name="end_of_tenancy_experience" type="checkbox" /></label>
+        <label><span>Deep clean experience?</span><input name="deep_clean_experience" type="checkbox" /></label>
+        <label><span>After builders experience?</span><input name="after_builders_experience" type="checkbox" /></label>
+        <label className="full">Oven/window/carpet experience<input name="oven_window_carpet_experience" placeholder="Describe relevant add-on experience" /></label>
         <label><span>Insurance uploaded?</span><input name="insurance_certificate_uploaded" type="checkbox" /></label>
         <label><span>ID/right-to-work uploaded?</span><input name="id_right_to_work_uploaded" type="checkbox" /></label>
         <label>Insurance expiry date<input name="insurance_expiry_date" type="date" /></label>

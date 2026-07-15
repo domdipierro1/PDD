@@ -92,6 +92,20 @@ export default function FormsPage() {
           </div>
         </div>
       </section>
+
+      <section className="card" style={{ marginTop: 18 }}>
+        <h2 style={{ marginTop: 0 }}>CRM setup pages</h2>
+        <div className="grid grid-2">
+          <div>
+            <h3>Form Specs</h3>
+            <p className="muted">Tracks the CRM/AppSheet blueprint for customer enquiry, quote, booking, contractor onboarding, job dispatch, completion/QA, issue/re-clean and review forms.</p>
+          </div>
+          <div>
+            <h3>Message Templates</h3>
+            <p className="muted">Editable customer and contractor templates. Use this instead of relying on hard-coded messages only.</p>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

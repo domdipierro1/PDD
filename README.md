@@ -203,3 +203,47 @@ v5.5 adds:
 - Launch readiness checklist items for insurance, contractor proof-test, Stripe, QA, completion form, review link and complaint process.
 
 Important: do not store the actual Companies House authentication code or Stripe secret keys inside CRM tables. Store only secure-status flags inside the CRM.
+
+## v5.6 — Launch Setup Tracker & Operating Workflow
+
+This version adds the launch setup tracker and operating controls requested for PDD Cleaning Services.
+
+### New/updated CRM sections
+- Company / Business Details: company number, website, GBP status, ICO status, solicitor review status, service-area business flags and review-link tracking.
+- Launch Setup Checklist: full launch categories, priority, status, owner, due date, evidence link and launch-blocker flag.
+- Insurance Checklist: tracks the actual PDD model where PDD arranges/manages work fulfilled mainly by bona fide self-employed subcontractors with their own public liability, while Dom may attend for access/QA/photos/key handling/minor touch-ups.
+- Legal Docs Checklist: contractor agreement, rate card, onboarding declaration, customer terms, privacy policy, complaint/re-clean policy, key/access policy and payment/cancellation terms.
+- Test Cleans: contractor test/live trial records, scores, photo/completion evidence and active approval decision.
+- Contractor onboarding fields: services offered, EOT/deep/after-builders/add-on experience and public liability flags.
+- QA/job close-out: checklist completed, access/key secured, issue reporting, customer completion message, 48-hour issue deadline and close-out status.
+- Contractor payment eligibility: system-controlled rule requiring cleared payment, completion form, before/after photo links, QA approval, property secured and no unresolved issue/payment hold.
+
+### Required Supabase migration
+Run after previous migrations:
+
+```sql
+supabase/migrations/006_launch_ops_setup_tracker.sql
+```
+
+### Hard rule preserved
+No contractor payment is eligible unless customer payment has cleared, job is completed, completion form/photos are submitted, QA is approved, property is secured, and no unresolved complaint, damage/access issue or payment hold exists.
+
+
+## v5.7 confirmed company/compliance CRM update
+
+Before uploading/running Supabase, this pack now includes the latest confirmed company, compliance, insurance, payment, form blueprint and editable message-template updates.
+
+After deploying this version, run migrations in order through:
+
+```text
+supabase/migrations/007_confirmed_company_compliance_templates.sql
+```
+
+New pages added:
+
+```text
+/message-templates
+/form-blueprints
+```
+
+Use these pages to edit customer/contractor messages and track the form setup blueprint before live operation.

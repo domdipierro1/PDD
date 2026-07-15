@@ -16,7 +16,8 @@ export async function POST(request: Request) {
 
   const propertySize = optionalText(payload, ["property_size", "property size", "property", "size"]);
   const serviceNeeded = optionalText(payload, ["service_needed", "service needed", "service", "cleaning service"]);
-  const message = optionalText(payload, ["message", "notes", "details", "condition_notes", "property condition"]);
+  const propertyCondition = optionalText(payload, ["property_condition", "property condition", "condition_notes", "condition notes"]);
+  const message = optionalText(payload, ["message", "notes", "details", "anything else we should know", "anything_else"]);
   const address = optionalText(payload, ["address", "selected_address", "full_address", "full address", "property address", "job address"]);
   const addressParts = [
     optionalText(payload, ["address_line_1", "address line 1", "line1", "street_address", "street address"]),
@@ -34,9 +35,12 @@ export async function POST(request: Request) {
     service_needed: serviceNeeded,
     preferred_date: optionalText(payload, ["preferred_date", "preferred date", "date", "job date"]),
     addons: arrayValue(payload, ["addons", "add-ons", "add ons", "extras", "additional services"]),
-    condition_notes: message,
-    access_notes: optionalText(payload, ["access_notes", "access notes", "access"]),
-    parking_notes: optionalText(payload, ["parking_notes", "parking notes", "parking"]),
+    condition_notes: [propertyCondition, message].filter(Boolean).join("\n\n") || null,
+    property_condition: propertyCondition,
+    photos_link: optionalText(payload, ["photos_link", "photos upload", "photos", "photo link", "property photos"]),
+    access_parking_key_notes: optionalText(payload, ["access_parking_key_notes", "access parking key notes", "access/parking/key notes", "access notes", "parking notes", "key notes"]),
+    access_notes: optionalText(payload, ["access_notes", "access notes", "access", "access/parking/key notes"]),
+    parking_notes: optionalText(payload, ["parking_notes", "parking notes", "parking", "access/parking/key notes"]),
     lead_source: text(payload, ["lead_source", "lead source", "source"], "Website"),
     quote_status: "Quote Needed",
     suggested_customer_quote: suggestedBaseQuote(propertySize || "") || null,
@@ -69,7 +73,10 @@ export async function POST(request: Request) {
     fieldLine("Preferred date", lead.preferred_date),
     fieldLine("Add-ons", lead.addons),
     fieldLine("Suggested quote", lead.suggested_customer_quote ? `£${lead.suggested_customer_quote}` : null),
-    fieldLine("Message", lead.condition_notes),
+    fieldLine("Property condition", propertyCondition),
+    fieldLine("Access/parking/key", lead.access_parking_key_notes),
+    fieldLine("Photos", lead.photos_link),
+    fieldLine("Message", message),
     "",
     `Open lead: ${portalLink(`/leads/${data?.id}`)}`,
     `All leads: ${portalLink("/leads")}`,

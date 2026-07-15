@@ -88,7 +88,8 @@ export default async function JobCompletionPage({ searchParams }: Props) {
           <label>Contractor name<input name="contractor name" defaultValue={contractorName} required /></label>
           <label>Job address<input name="job address" defaultValue={jobAddress} required /></label>
           <label>Date completed<input name="date completed" type="date" required /></label>
-          <label>Time completed<input name="time completed" placeholder="e.g. 16:30" required /></label>
+          <label>Arrival time<input name="arrival time" placeholder="e.g. 09:00" required /></label>
+          <label>Completion time<input name="time completed" placeholder="e.g. 16:30" required /></label>
 
           <div className="notice full">
             <strong>Required completion checklist</strong><br />
@@ -107,6 +108,10 @@ export default async function JobCompletionPage({ searchParams }: Props) {
 
           <label>Any issues?<select name="any issues"><option>No</option><option>Yes</option></select></label>
           <label>Property secured?<select name="property secured"><option>Yes</option><option>No</option></select></label>
+          <label>Keys returned/secured?<select name="keys returned secured"><option>Not applicable</option><option>Yes</option><option>No</option></select></label>
+          <label>Extra work requested?<select name="extra work requested"><option>No</option><option>Yes</option></select></label>
+          <label>Scope issue?<select name="scope issue"><option>No</option><option>Yes</option></select></label>
+          <label>Contractor payment requested?<select name="contractor payment requested"><option>No</option><option>Yes</option></select></label>
 
           <label className="full">Unable to complete / not applicable items<textarea name="unable to complete notes" placeholder="List anything not completed, not accessible, heavily stained, damaged, missing utilities, locked rooms, parking/access issues, etc." /></label>
           <label className="full">Describe issue, if any<textarea name="describe issue" placeholder="Use this for customer/property/access/damage issues that PDD should review before QA approval." /></label>

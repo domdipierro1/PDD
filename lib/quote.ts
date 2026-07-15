@@ -22,7 +22,7 @@ export function marginPercent(customerPrice?: number | null, contractorCost?: nu
   return ((Number(customerPrice) - Number(contractorCost)) / Number(customerPrice)) * 100;
 }
 
-export function contractorPaymentDue(job: Pick<Job, "payment_cleared" | "completion_form_submitted" | "before_photos_link" | "after_photos_link" | "qa_status" | "property_secured" | "payment_hold" | "customer_issue" | "contractor_issue" | "contractor_paid">) {
+export function contractorPaymentDue(job: Pick<Job, "payment_cleared" | "completion_form_submitted" | "before_photos_link" | "after_photos_link" | "qa_status" | "property_secured" | "payment_hold" | "customer_issue" | "contractor_issue" | "contractor_paid" | "issues_reported" | "access_key_returned_secured" | "checklist_completed">) {
   return Boolean(
     job.payment_cleared &&
     job.completion_form_submitted &&
@@ -33,6 +33,7 @@ export function contractorPaymentDue(job: Pick<Job, "payment_cleared" | "complet
     !job.payment_hold &&
     !job.customer_issue &&
     !job.contractor_issue &&
+    !job.issues_reported &&
     !job.contractor_paid
   );
 }

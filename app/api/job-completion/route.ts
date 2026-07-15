@@ -28,6 +28,10 @@ export async function POST(request: Request) {
   const anyIssues = bool(payload, ["any issues", "any_issues", "issues"]);
   const issueDescription = optionalText(payload, ["describe issue", "issue description", "issue_description"]);
   const propertySecured = bool(payload, ["property secured", "property_secured"]);
+  const keysReturnedSecured = optionalText(payload, ["keys returned secured", "keys_returned_secured", "keys returned", "keys secured"]);
+  const extraWorkRequested = bool(payload, ["extra work requested", "extra_work_requested"]);
+  const scopeIssue = bool(payload, ["scope issue", "scope_issue"]);
+  const contractorPaymentRequested = bool(payload, ["contractor payment requested", "contractor_payment_requested"]);
   const kitchenChecklist = arrayValue(payload, ["kitchen checklist", "kitchen_checklist"]);
   const bathroomChecklist = arrayValue(payload, ["bathroom checklist", "bathroom_checklist"]);
   const livingChecklist = arrayValue(payload, ["living checklist", "bedrooms living checklist", "living_checklist"]);
@@ -49,6 +53,7 @@ export async function POST(request: Request) {
     contractor_name: optionalText(payload, ["contractor name", "contractor_name", "name"]),
     job_address: optionalText(payload, ["job address", "job_address", "property address", "address"]),
     date_completed: dateValue(payload, ["date completed", "date_completed", "completion date"]),
+    arrival_time: optionalText(payload, ["arrival time", "arrival_time", "time arrived"]),
     time_completed: optionalText(payload, ["time completed", "time_completed", "completion time"]),
     kitchen_completed: kitchenChecklist.length > 0 || bool(payload, ["kitchen completed", "kitchen", "kitchen confirmed complete"]),
     bathroom_completed: bathroomChecklist.length > 0 || bool(payload, ["bathroom completed", "bathroom", "bathroom confirmed complete"]),
@@ -60,6 +65,11 @@ export async function POST(request: Request) {
     any_issues: anyIssues,
     issue_description: issueDescription,
     property_secured: propertySecured,
+    checklist_completed: kitchenChecklist.length > 0 && bathroomChecklist.length > 0 && livingChecklist.length > 0 && generalChecklist.length > 0,
+    keys_returned_secured: keysReturnedSecured || "Not applicable",
+    extra_work_requested: extraWorkRequested,
+    scope_issue: scopeIssue,
+    contractor_payment_requested: contractorPaymentRequested,
     additional_notes: [optionalText(payload, ["additional notes", "notes"]), checklistNotes].filter(Boolean).join("\n\n") || null,
   };
 
@@ -102,11 +112,15 @@ export async function POST(request: Request) {
         issueDescription ? `Issue: ${issueDescription}` : null,
       ].filter(Boolean).join("\n\n") || null,
       property_secured: propertySecured,
+      checklist_completed: true,
+      access_key_returned_secured: keysReturnedSecured === "Yes" || keysReturnedSecured === "Not applicable",
+      issues_reported: anyIssues || scopeIssue || extraWorkRequested,
+      contractor_payment_requested: contractorPaymentRequested,
       qa_status: "Awaiting QA",
-      job_status: "Completed - Awaiting QA",
-      customer_issue: anyIssues,
-      payment_hold: anyIssues,
-      payment_hold_reason: anyIssues ? "Issue reported on contractor completion form." : null,
+      job_status: "QA Review",
+      customer_issue: anyIssues || scopeIssue,
+      payment_hold: anyIssues || scopeIssue || extraWorkRequested,
+      payment_hold_reason: anyIssues || scopeIssue || extraWorkRequested ? "Issue/scope/extra work reported on contractor completion form." : null,
     };
 
     await supabase.from("jobs").update(updatePayload).eq("id", jobId);
@@ -114,6 +128,8 @@ export async function POST(request: Request) {
 
   const completionProblems = [
     anyIssues ? "Issue reported" : null,
+    scopeIssue ? "Scope issue" : null,
+    extraWorkRequested ? "Extra work requested" : null,
     !beforePhotos ? "Before photos missing" : null,
     !afterPhotos ? "After photos missing" : null,
     !propertySecured ? "Property not confirmed secured" : null,
@@ -126,12 +142,17 @@ export async function POST(request: Request) {
     fieldLine("Job address", submission.job_address),
     fieldLine("Linked job ID", jobId),
     fieldLine("Date completed", submission.date_completed),
+    fieldLine("Arrival time", submission.arrival_time),
     fieldLine("Time completed", submission.time_completed),
     fieldLine("Before photos", beforePhotos ? "Submitted" : "Missing"),
     fieldLine("After photos", afterPhotos ? "Submitted" : "Missing"),
     fieldLine("Issue reported", anyIssues ? "Yes" : "No"),
     fieldLine("Issue details", issueDescription),
     fieldLine("Property secured", propertySecured ? "Yes" : "No"),
+    fieldLine("Keys returned/secured", keysReturnedSecured),
+    fieldLine("Extra work requested", extraWorkRequested ? "Yes" : "No"),
+    fieldLine("Scope issue", scopeIssue ? "Yes" : "No"),
+    fieldLine("Contractor payment requested", contractorPaymentRequested ? "Yes" : "No"),
     fieldLine("Review flags", completionProblems || null),
     "",
     "Next step: QA review before contractor payment.",

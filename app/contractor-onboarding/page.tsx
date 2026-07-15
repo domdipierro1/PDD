@@ -14,10 +14,15 @@ export default function ContractorOnboardingPage() {
           <label>Areas covered<input name="areas covered" placeholder="e.g. Enfield, Southgate, Wood Green" required /></label>
           <label>Own transport?<select name="own transport"><option>Yes</option><option>No</option></select></label>
           <label>Years of experience<input name="years of experience" type="number" min="0" /></label>
-          <label>EOT/deep clean experience?<select name="eot/deep clean experience"><option>Yes</option><option>No</option></select></label>
+          <label>Services offered<input name="services_offered" placeholder="EOT, deep clean, after builders, oven, windows, carpets" /></label>
+          <label>End of tenancy experience?<select name="end_of_tenancy_experience"><option>Yes</option><option>No</option></select></label>
+          <label>Deep clean experience?<select name="deep_clean_experience"><option>Yes</option><option>No</option></select></label>
+          <label>After builders experience?<select name="after_builders_experience"><option>No</option><option>Yes</option></select></label>
+          <label>Oven/window/carpet experience?<input name="oven_window_carpet_experience" placeholder="Oven, interior windows, carpets etc." /></label>
           <label>Self-employed with HMRC?<select name="self-employed with hmrc"><option>Yes</option><option>No</option><option>Not Sure</option></select></label>
           <label>Own public liability insurance?<select name="own public liability insurance"><option>Yes</option><option>No</option></select></label>
           <label>Insurance expiry date<input name="insurance expiry date" type="date" /></label>
+          <label>Insurance cover amount<input name="insurance cover amount" inputMode="decimal" placeholder="e.g. 1000000" /></label>
           <label className="full">Insurance certificate link <span className="help">Google Drive, Dropbox or other secure link for now.</span><input name="insurance file" placeholder="https://..." /></label>
           <label className="full">Right-to-work / ID link <span className="help">Secure link for now. Do not send by public comment or social media.</span><input name="right to work" placeholder="https://..." /></label>
           <label>Willing to do a paid trial/live trial?<select name="willing to do a paid test job"><option>Yes</option><option>No</option></select></label>

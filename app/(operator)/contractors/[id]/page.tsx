@@ -130,6 +130,11 @@ export default function ContractorDetailPage() {
             <div><span>Active rota approved</span><strong>{contractor.active_rota_approved ? "Yes" : "No"}</strong></div>
             <div><span>HMRC status</span><strong>{contractor.hmrc_status || "—"}</strong></div>
             <div><span>DBS status</span><strong>{contractor.dbs_status || "—"}</strong></div>
+            <div><span>Services offered</span><strong>{contractor.services_offered || "—"}</strong></div>
+            <div><span>EOT experience</span><strong>{contractor.end_of_tenancy_experience ? "Yes" : "No"}</strong></div>
+            <div><span>Deep clean experience</span><strong>{contractor.deep_clean_experience ? "Yes" : "No"}</strong></div>
+            <div><span>After builders experience</span><strong>{contractor.after_builders_experience ? "Yes" : "No"}</strong></div>
+            <div><span>Add-on experience</span><strong>{contractor.oven_window_carpet_experience || "—"}</strong></div>
           </div>
           <h3>Notes</h3>
           <p className="help">{contractor.notes || "No notes yet."}</p>

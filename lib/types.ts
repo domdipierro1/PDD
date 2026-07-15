@@ -55,6 +55,9 @@ export type Lead = {
   payment_hold?: boolean | null;
   payment_hold_reason?: string | null;
   contractor_payment_eligible?: boolean | null;
+  property_condition?: string | null;
+  photos_link?: string | null;
+  access_parking_key_notes?: string | null;
 };
 
 export type Contractor = {
@@ -94,6 +97,18 @@ export type Contractor = {
   quality_score?: number | null;
   rate_notes?: string | null;
   last_contacted_at?: string | null;
+  services_offered?: string | null;
+  end_of_tenancy_experience?: boolean | null;
+  deep_clean_experience?: boolean | null;
+  after_builders_experience?: boolean | null;
+  oven_window_carpet_experience?: string | null;
+  self_employed_status?: string | null;
+  public_liability_received?: boolean | null;
+  oven_experience?: boolean | null;
+  window_experience?: boolean | null;
+  carpet_experience?: boolean | null;
+  documents_admin_only?: boolean | null;
+  bank_details_admin_only?: boolean | null;
 };
 
 export type ContractorRate = {
@@ -199,6 +214,23 @@ export type Job = {
   review_rating?: number | null;
   review_notes?: string | null;
   issue_resolved_before_review_request?: boolean | null;
+  checklist_completed?: boolean | null;
+  access_key_returned_secured?: boolean | null;
+  issues_reported?: boolean | null;
+  customer_completion_message_sent?: boolean | null;
+  issue_deadline?: string | null;
+  job_close_out_status?: string | null;
+  payment_method?: string | null;
+  payment_type?: string | null;
+  expected_gross_profit?: number | null;
+  expected_margin_percent?: number | null;
+  tide_transfer_reference?: string | null;
+  damage_access_issue?: boolean | null;
+  damage_access_issue_notes?: string | null;
+  contractor_payment_requested?: boolean | null;
+  manual_start_approved_by_dom?: boolean | null;
+  customer_terms_accepted?: boolean | null;
+  cancellation_start_work_consent_accepted?: boolean | null;
 };
 
 export type Complaint = {
@@ -220,6 +252,12 @@ export type Complaint = {
   final_outcome: string | null;
   closed_date: string | null;
   review_risk: boolean | null;
+  issue_reported_date?: string | null;
+  within_48_hours?: boolean | null;
+  covered_by_agreed_checklist?: string | null;
+  contractor_responsible?: string | null;
+  payment_hold?: boolean | null;
+  resolution?: string | null;
 };
 
 export type PricingReference = {
@@ -245,6 +283,8 @@ export type LaunchChecklistItem = {
   due_date: string | null;
   evidence_link: string | null;
   notes: string | null;
+  priority?: string | null;
+  blocks_launch?: boolean | null;
 };
 
 export type AgentOutreach = {
@@ -301,19 +341,47 @@ export type BusinessSettings = {
   created_at: string;
   updated_at: string | null;
   legal_company_name: string | null;
+  company_type?: string | null;
+  incorporation_date?: string | null;
+  registered_in?: string | null;
   trading_name: string | null;
   company_number: string | null;
   registered_office_address: string | null;
   actual_trading_admin_address: string | null;
   business_email: string | null;
+  public_customer_email?: string | null;
   admin_backup_email: string | null;
   phone_number: string | null;
+  website?: string | null;
+  google_business_profile_status?: string | null;
+  ico_registration_status?: string | null;
+  solicitor_review_status?: string | null;
+  google_review_link?: string | null;
+  google_review_link_saved?: boolean | null;
+  service_area_business?: boolean | null;
+  storefront_required?: boolean | null;
   tide_account_status: string | null;
   stripe_account_status: string | null;
+  stripe_payout_bank?: string | null;
   insurance_status: string | null;
+  ico_application_reference?: string | null;
+  public_liability_provider?: string | null;
+  public_liability_policy_number?: string | null;
+  public_liability_cover_amount?: number | null;
+  public_liability_start_date?: string | null;
+  public_liability_end_date?: string | null;
+  professional_indemnity_status?: string | null;
+  professional_indemnity_provider?: string | null;
+  professional_indemnity_cover_amount?: number | null;
+  professional_indemnity_certificate_upload?: string | null;
+  professional_indemnity_expiry_date?: string | null;
   companies_house_auth_code_stored_securely: boolean | null;
   hmrc_utr_received: boolean | null;
   corporation_tax_setup_status: string | null;
+  vat_registered?: boolean | null;
+  actual_trading_admin_address_restricted?: boolean | null;
+  auth_code_restricted?: boolean | null;
+  service_area_notes?: string | null;
   notes: string | null;
 };
 
@@ -346,6 +414,123 @@ export type AuditLogItem = {
   actor: string | null;
 };
 
+
+
+export type InsuranceChecklist = {
+  id: string;
+  created_at: string;
+  updated_at: string | null;
+  broker_insurer_contacted: string | null;
+  public_liability_quoted: boolean | null;
+  professional_indemnity_quoted: boolean | null;
+  employers_liability_needed: string | null;
+  bona_fide_subcontractors_allowed: string | null;
+  subcontractors_must_hold_own_pl: boolean | null;
+  minimum_subcontractor_pl_cover: string | null;
+  pdd_site_visits_access_qa_key_photos_touchups_covered: string | null;
+  arranging_managing_vetting_admin_risk_covered: string | null;
+  policy_responds_if_customer_claims_against_pdd: string | null;
+  exclusion_external_windows: boolean | null;
+  exclusion_carpet_cleaning: boolean | null;
+  exclusion_waste: boolean | null;
+  exclusion_jet_washing: boolean | null;
+  exclusion_after_builders: boolean | null;
+  exclusion_oven_cleaning: boolean | null;
+  policy_purchased: boolean | null;
+  policy_start_date: string | null;
+  renewal_date: string | null;
+  policy_documents_uploaded: boolean | null;
+  evidence_link: string | null;
+  launch_blocker: boolean | null;
+  status: string | null;
+  notes: string | null;
+  model_confirmed_by_broker: boolean | null;
+  public_liability_provider?: string | null;
+  public_liability_policy_number?: string | null;
+  public_liability_cover_amount?: number | null;
+  occupation_class?: string | null;
+  cover_start_date?: string | null;
+  cover_end_date?: string | null;
+  professional_indemnity_status?: string | null;
+  professional_indemnity_provider?: string | null;
+  professional_indemnity_cover_amount?: number | null;
+  professional_indemnity_certificate_upload?: string | null;
+  professional_indemnity_expiry_date?: string | null;
+  policy_wording_link?: string | null;
+  admin_only_documents?: boolean | null;
+};
+
+export type LegalDocumentChecklist = {
+  id: string;
+  created_at: string;
+  updated_at: string | null;
+  document_name: string;
+  current_version: string | null;
+  status: string | null;
+  solicitor_review_needed: boolean | null;
+  last_updated: string | null;
+  notes: string | null;
+  file_link: string | null;
+  launch_blocker: boolean | null;
+};
+
+export type TestClean = {
+  id: string;
+  created_at: string;
+  updated_at: string | null;
+  contractor_id: string | null;
+  contractor_name: string | null;
+  test_clean_address: string | null;
+  test_clean_type: string | null;
+  scheduled_at: string | null;
+  agreed_test_fee: number | null;
+  checklist_sent: boolean | null;
+  before_photos_received: boolean | null;
+  after_photos_received: boolean | null;
+  completion_form_received: boolean | null;
+  quality_score: number | null;
+  communication_score: number | null;
+  punctuality_score: number | null;
+  passed: boolean | null;
+  active_approval_decision: string | null;
+  notes: string | null;
+  evidence_link: string | null;
+};
+
+
+export type MessageTemplate = {
+  id: string;
+  created_at: string;
+  updated_at: string | null;
+  template_id: string;
+  template_name: string;
+  category: string;
+  stage_status: string | null;
+  channel: string | null;
+  subject_line: string | null;
+  message_body: string;
+  variables_used: string | null;
+  active: boolean | null;
+  notes: string | null;
+};
+
+export type CrmFormBlueprint = {
+  id: string;
+  created_at: string;
+  updated_at: string | null;
+  form_key: string;
+  form_name: string;
+  form_type: string | null;
+  linked_table: string | null;
+  purpose: string | null;
+  required_fields: string | null;
+  optional_fields: string | null;
+  status: string | null;
+  owner: string | null;
+  notes: string | null;
+  active: boolean | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -364,6 +549,11 @@ export type Database = {
       finance_items: Tables<FinanceItem>;
       audit_log: Tables<AuditLogItem>;
       business_settings: Tables<BusinessSettings>;
+      insurance_checklist: Tables<InsuranceChecklist>;
+      legal_documents_checklist: Tables<LegalDocumentChecklist>;
+      test_cleans: Tables<TestClean>;
+      message_templates: Tables<MessageTemplate>;
+      crm_form_blueprints: Tables<CrmFormBlueprint>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

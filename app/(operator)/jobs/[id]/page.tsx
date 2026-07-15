@@ -179,6 +179,7 @@ export default function JobDetailPage() {
   const totalCosts = Number(currentJob.contractor_cost || 0) + extraCosts;
   const todayISO = new Date().toISOString().slice(0, 10);
   const googleReviewLink = process.env.NEXT_PUBLIC_GOOGLE_REVIEW_URL || "[GOOGLE REVIEW LINK]";
+  const issueDeadlineISO = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
 
   async function copyCompletionLink() {
     const absolute = `${window.location.origin}${completionFormLink}`;
@@ -241,6 +242,8 @@ PDD Cleaning Services`;
             <div><span>Extra revenue</span><strong>{formatCurrency(extraRevenue)}</strong></div>
             <div><span>Extra costs</span><strong>{formatCurrency(extraCosts)}</strong></div>
             <div><span>Total job profit</span><strong>{formatCurrency(totalRevenue - totalCosts)}</strong></div>
+            <div><span>Expected gross profit</span><strong>{formatCurrency(currentJob.expected_gross_profit)}</strong></div>
+            <div><span>Expected margin %</span><strong>{currentJob.expected_margin_percent ? `${currentJob.expected_margin_percent}%` : "—"}</strong></div>
             <div><span>Customer paid</span><strong>{currentJob.customer_paid ? "Yes" : "No"}</strong></div>
             <div><span>Payment cleared</span><strong>{currentJob.payment_cleared ? "Yes" : "No"}</strong></div>
             <div><span>Quote amount</span><strong>{formatCurrency(currentJob.quote_amount || currentJob.customer_price)}</strong></div>
@@ -253,6 +256,13 @@ PDD Cleaning Services`;
             <div><span>Full payment paid</span><strong>{currentJob.full_payment_paid ? "Yes" : "No"}</strong></div>
             <div><span>Completion form</span><strong>{currentJob.completion_form_submitted ? "Submitted" : "Not submitted"}</strong></div>
             <div><span>Property secured</span><strong>{currentJob.property_secured ? "Yes" : "No"}</strong></div>
+            <div><span>Checklist completed</span><strong>{currentJob.checklist_completed ? "Yes" : "No"}</strong></div>
+            <div><span>Access/key returned/secured</span><strong>{currentJob.access_key_returned_secured ? "Yes" : "No"}</strong></div>
+            <div><span>Issues reported</span><strong>{currentJob.issues_reported ? "Yes" : "No"}</strong></div>
+            <div><span>Damage/access issue</span><strong>{currentJob.damage_access_issue ? "Yes" : "No"}</strong></div>
+            <div><span>Customer completion sent</span><strong>{currentJob.customer_completion_message_sent ? "Yes" : "No"}</strong></div>
+            <div><span>48-hour issue deadline</span><strong>{formatDate(currentJob.issue_deadline)}</strong></div>
+            <div><span>Close-out status</span><strong>{currentJob.job_close_out_status || "Open"}</strong></div>
             <div><span>Contractor paid</span><strong>{currentJob.contractor_paid ? "Yes" : "No"}</strong></div>
           </div>
           <div style={{ marginTop: 14 }}><MetricRow customerPrice={currentJob.customer_price} contractorCost={currentJob.contractor_cost} /></div>
@@ -263,6 +273,9 @@ PDD Cleaning Services`;
             <div><span>Balance link</span><strong>{currentJob.balance_payment_link ? <a href={currentJob.balance_payment_link} target="_blank">Open</a> : "—"}</strong></div>
             <div><span>Stripe Payment ID</span><strong>{currentJob.stripe_payment_id || "—"}</strong></div>
             <div><span>Stripe Checkout Session</span><strong>{currentJob.stripe_checkout_session_id || "—"}</strong></div>
+            <div><span>Payment type</span><strong>{currentJob.payment_type || "Full"}</strong></div>
+            <div><span>Payment method</span><strong>{currentJob.payment_method || "Stripe"}</strong></div>
+            <div><span>Tide transfer reference</span><strong>{currentJob.tide_transfer_reference || "—"}</strong></div>
             <div><span>Payment notes</span><strong>{currentJob.payment_notes || "—"}</strong></div>
           </div>
           <h3>Photos / completion</h3>
@@ -294,9 +307,11 @@ PDD Cleaning Services`;
             <button className="button secondary" onClick={() => update({ contractor_confirmed: true, contractor_confirmation_time: new Date().toISOString(), job_status: "Contractor Confirmed" }, "Contractor confirmed.")}>Contractor confirmed</button>
             <button className="button secondary" onClick={() => update({ job_status: "In Progress" }, "Job marked in progress.")}>In progress</button>
             <button className="button secondary" onClick={() => update({ completion_form_submitted: true, job_status: "QA Review", qa_status: "Awaiting QA" }, "Completion received. QA required.")}>Completion received</button>
-            <button className="button secondary" onClick={() => update({ property_secured: true }, "Property secured confirmed.")}>Property secured</button>
+            <button className="button secondary" onClick={() => update({ property_secured: true, access_key_returned_secured: true }, "Property/access secured confirmed.")}>Property secured</button>
+            <button className="button secondary" onClick={() => update({ checklist_completed: true }, "Checklist marked completed.")}>Checklist completed</button>
             <button className="button" onClick={() => update({ qa_status: "QA Approved", qa_checked_at: new Date().toISOString(), job_status: "Completed - Awaiting Review Request", payment_hold: false }, "QA approved.")}>QA approved</button>
-            <button className="button ghost" onClick={() => update({ qa_status: "Re-clean Needed", payment_hold: true, job_status: "Issue / Re-clean" }, "Re-clean needed. Payment hold added.")}>Re-clean needed</button>
+            <button className="button ghost" onClick={() => update({ qa_status: "Re-clean Needed", payment_hold: true, issues_reported: true, job_status: "Issue / Re-clean" }, "Re-clean needed. Payment hold added.")}>Re-clean needed</button>
+            <button className="button ghost" onClick={() => update({ damage_access_issue: true, payment_hold: true, job_status: "Payment Hold", payment_hold_reason: currentJob.payment_hold_reason || "Damage/access issue requires review" }, "Damage/access issue logged and payment hold added.")}>Damage/access issue</button>
             <button className="button secondary" onClick={() => update({ job_status: "Payment Link Sent", deposit_link_sent_date: currentJob.deposit_payment_link ? todayISO : currentJob.deposit_link_sent_date, balance_link_sent_date: currentJob.balance_payment_link ? todayISO : currentJob.balance_link_sent_date }, "Payment link marked sent.")}>Payment link sent</button>
             <button className="button secondary" onClick={() => update({ deposit_paid: true, deposit_paid_date: todayISO, job_status: currentJob.balance_amount ? "Awaiting Balance" : "Deposit Paid" }, "Deposit marked paid.")}>Deposit paid</button>
             <button className="button secondary" onClick={() => update({ balance_paid: true, balance_paid_date: todayISO, customer_paid: true, payment_cleared: true, customer_payment_date: todayISO, job_status: "Fully Paid" }, "Balance marked paid and cleared.")}>Balance paid</button>
@@ -306,9 +321,9 @@ PDD Cleaning Services`;
             <button className="button" disabled={!canPay} onClick={() => update({ contractor_paid: true, contractor_payment_date: todayISO, job_status: "Contractor Paid", contractor_payment_eligible: true }, "Contractor marked paid.")}>Mark contractor paid</button>
             <Link className="button danger" href={`/complaints/new?job_id=${currentJob.id}`}>Log complaint</Link>
           </div>
-          <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after customer payment has cleared, completion form is submitted, before/after photo links are present, QA is approved, the property is secured and no unresolved issue/payment hold exists.</div>
+          <div className="notice warn" style={{ marginTop: 14 }}>Contractor payment only becomes due after customer payment has cleared, completion form is submitted, before/after photo links are present, QA is approved, the property is secured, and there is no unresolved complaint, damage/access issue or payment hold.</div>
           <div className="notice" style={{ marginTop: 14 }}><strong>Contractor job completion form</strong><br />Send this job-specific link after the contractor is assigned.<br /><button className="button ghost" type="button" onClick={copyCompletionLink} style={{ marginTop: 10 }}>Copy completion form link</button><button className="button ghost" type="button" onClick={copyDispatchMessage} style={{ marginTop: 10 }}>Copy contractor dispatch message</button></div>
-          <div className="notice" style={{ marginTop: 14 }}><strong>Customer completion / review process</strong><br />Only request a genuine Google review after QA and issue checks. No incentives or pressure.<br /><button className="button ghost" type="button" onClick={copyReviewMessage} style={{ marginTop: 10 }}>Copy completion/review message</button><button className="button secondary" type="button" onClick={() => update({ review_requested: true, review_request_sent: true, review_link_sent_at: new Date().toISOString(), review_request_sent_date: todayISO, job_status: "Completed - Awaiting Review Request" }, "Review request marked sent.")} style={{ marginTop: 10 }}>Review request sent</button><button className="button secondary" type="button" onClick={() => update({ review_follow_up_sent: true, review_follow_up_date: todayISO }, "Review follow-up marked sent.")} style={{ marginTop: 10 }}>Review follow-up sent</button><button className="button" type="button" onClick={() => update({ review_received: true, review_platform: "Google", job_status: "Closed" }, "Review marked received and job closed.")} style={{ marginTop: 10 }}>Review received</button></div>
+          <div className="notice" style={{ marginTop: 14 }}><strong>Customer completion / review process</strong><br />Only request a genuine Google review after QA and issue checks. No incentives or pressure.<br /><button className="button ghost" type="button" onClick={copyReviewMessage} style={{ marginTop: 10 }}>Copy completion/review message</button><button className="button secondary" type="button" onClick={() => update({ review_requested: true, review_request_sent: true, review_link_sent_at: new Date().toISOString(), review_request_sent_date: todayISO, customer_completion_message_sent: true, issue_deadline: issueDeadlineISO, job_close_out_status: "48-hour issue window", job_status: "Completed - Awaiting Review Request" }, "Completion/review message marked sent.")} style={{ marginTop: 10 }}>Review request sent</button><button className="button secondary" type="button" onClick={() => update({ review_follow_up_sent: true, review_follow_up_date: todayISO }, "Review follow-up marked sent.")} style={{ marginTop: 10 }}>Review follow-up sent</button><button className="button" type="button" onClick={() => update({ review_received: true, review_platform: "Google", job_status: "Closed", job_close_out_status: "Closed" }, "Review marked received and job closed.")} style={{ marginTop: 10 }}>Review received</button></div>
           <div className="notice bad" style={{ marginTop: 14 }}>
             <strong>Danger zone</strong><br />
             Delete this job only if it was created by mistake or is a duplicate. This removes linked internal records where possible.
